@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+    --font-display: 'Montserrat', sans-serif;
+    
+    --color-primary: #785BF8;
+}
+
+.primary-btn {
+    @apply bg-sky-500 text-gray-100 hover:bg-sky-600 transition-all;
+}
+
+.container {
+    @apply mt-5 bg-white border border-gray-300 p-6 rounded-2xl shadow;
+}
+
+.input-field {
+    @apply p-3 outline-none border-2 border-gray-500 rounded-full;
+}
+
+.error {
+    @apply text-red-500 text-sm;
+}
+
+html {
+    font-family: 'Montserrat', sans-serif;
+    overflow-x: hidden;
+}
