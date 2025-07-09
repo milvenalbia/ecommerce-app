@@ -7,7 +7,7 @@
 }
 
 .primary-btn {
-    @apply bg-sky-500 text-gray-100 hover:bg-sky-600 transition-all;
+    @apply bg-purple-400 text-gray-100 hover:bg-purple-500 transition-all;
 }
 
 .container {
@@ -16,6 +16,10 @@
 
 .input-field {
     @apply p-3 outline-none border-2 border-gray-500 rounded-full;
+}
+
+.input-field-1 {
+    @apply p-3 outline-none border-2 border-gray-500 rounded-md;
 }
 
 .error {

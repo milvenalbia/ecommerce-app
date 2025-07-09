@@ -7,7 +7,7 @@ const AdminLayout = () => {
   return (
     <div className="flex">
       <Sidebar />
-      <main className="flex flex-col w-full py-3 px-5">
+      <main className="flex flex-col w-full max-w-[calc(100%-280px)] py-3 px-5">
         <Header />
         <Outlet />
       </main>

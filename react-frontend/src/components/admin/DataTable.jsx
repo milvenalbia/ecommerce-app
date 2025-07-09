@@ -11,6 +11,7 @@ import {
   Edit,
   Trash2,
   MoreHorizontal,
+  Plus,
 } from "lucide-react";
 import api from "../../api/axios";
 
@@ -30,6 +31,8 @@ const DataTable = ({
   onDelete = null,
   onCustomAction = null,
   customActions = [],
+  addButton = null,
+  onAdd = null,
 }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -61,7 +64,7 @@ const DataTable = ({
 
       const result = response.data;
 
-      setData(result.data); // assuming you use Laravel's paginate()
+      setData(result.data);
       setTotalPages(result.last_page);
       setTotalRecords(result.total);
     } catch (error) {
@@ -74,7 +77,7 @@ const DataTable = ({
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 500); // 500ms debounce
+    }, 500);
 
     return () => {
       clearTimeout(handler);
@@ -135,6 +138,12 @@ const DataTable = ({
     setCurrentPage(1);
   };
 
+  const handleAdd = () => {
+    if (onAdd) {
+      onAdd();
+    }
+  };
+
   const handleEdit = (row) => {
     if (onEdit) {
       onEdit(row);
@@ -170,7 +179,7 @@ const DataTable = ({
             className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
             title="Edit"
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-5 h-5" />
           </button>
         )}
 
@@ -183,7 +192,7 @@ const DataTable = ({
             className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
             title="Delete"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-5 h-5" />
           </button>
         )}
 
@@ -248,7 +257,7 @@ const DataTable = ({
   };
 
   return (
-    <div>
+    <div className="w-full">
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -259,6 +268,15 @@ const DataTable = ({
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {addButton && (
+              <button
+                onClick={handleAdd}
+                className="primary-btn px-3 py-2 text-sm text-white font-medium inline-flex items-center gap-2 rounded-md"
+              >
+                <Plus size={22} />
+                <span>{addButton}</span>
+              </button>
+            )}
             <button
               onClick={clearFilters}
               className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
@@ -333,7 +351,7 @@ const DataTable = ({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto overflow-y-clip">
+      <div className="w-full overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -350,19 +368,19 @@ const DataTable = ({
                   <div className="flex items-center gap-2">
                     {column.title}
                     {column.sortable && (
-                      <div className="flex flex-col">
+                      <div className="flex flex-col gap-1.5">
                         <div
-                          className={`w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent ${
+                          className={`w-0 h-0 border-l-5 border-r-5 border-b-5 border-l-transparent border-r-transparent ${
                             sortField === column.key && sortDirection === "asc"
                               ? "border-b-blue-600"
-                              : "border-b-gray-300"
+                              : "border-b-gray-500"
                           } -mb-1`}
                         />
                         <div
-                          className={`w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent ${
+                          className={`w-0 h-0 border-l-5 border-r-5 border-t-5 border-l-transparent border-r-transparent ${
                             sortField === column.key && sortDirection === "desc"
                               ? "border-t-blue-600"
-                              : "border-t-gray-300"
+                              : "border-t-gray-500"
                           }`}
                         />
                       </div>
@@ -411,7 +429,7 @@ const DataTable = ({
                     </td>
                   ))}
                   {showActions && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 w-[10%] py-4 whitespace-nowrap text-sm text-gray-900">
                       {renderActionButtons(row)}
                     </td>
                   )}
