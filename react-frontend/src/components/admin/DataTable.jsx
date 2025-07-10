@@ -1,4 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import {
@@ -15,25 +20,24 @@ import {
 } from "lucide-react";
 import api from "../../api/axios";
 
-const DataTable = ({
-  columns = [],
-  apiEndpoint = "/api/users",
-  title = "Data Table",
-  showDateFilter = true,
-  showSearch = true,
-  showPagination = true,
-  showPerPage = true,
-  defaultPerPage = 10,
-  onRowClick = null,
-  customFilters = [],
-  showActions = true,
-  onEdit = null,
-  onDelete = null,
-  onCustomAction = null,
-  customActions = [],
-  addButton = null,
-  onAdd = null,
-}) => {
+const DataTable = forwardRef((props, ref) => {
+  const {
+    columns = [],
+    apiEndpoint = "/api/users",
+    title = "Data Table",
+    showDateFilter = true,
+    showSearch = true,
+    showPagination = true,
+    showPerPage = true,
+    defaultPerPage = 10,
+    showActions = true,
+    onEdit = null,
+    onDelete = null,
+    onCustomAction = null,
+    customActions = [],
+    addButton = null,
+    onAdd = null,
+  } = props;
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -96,6 +100,10 @@ const DataTable = ({
     dateFrom,
     dateTo,
   ]);
+
+  useImperativeHandle(ref, () => ({
+    fetchData,
+  }));
 
   const displayColumns = columns;
 
@@ -229,28 +237,65 @@ const DataTable = ({
 
   const renderPagination = () => {
     const pages = [];
-    const maxVisiblePages = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    const createPageButton = (page) => (
+      <button
+        key={page}
+        onClick={() => handlePageChange(page)}
+        className={`px-3 py-2 mx-1 rounded-md text-sm font-medium transition-colors ${
+          page === currentPage
+            ? "bg-blue-600 text-white"
+            : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+        }`}
+      >
+        {page}
+      </button>
+    );
+
+    const addEllipsis = (key) => (
+      <span key={key} className="px-2 text-gray-500">
+        ...
+      </span>
+    );
+
+    // Handle edge cases first
+    if (totalPages <= 5) {
+      // Show all pages if 5 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(createPageButton(i));
+      }
+      return pages;
     }
 
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(
-        <button
-          key={i}
-          onClick={() => handlePageChange(i)}
-          className={`px-3 py-2 mx-1 rounded-md text-sm font-medium transition-colors ${
-            i === currentPage
-              ? "bg-blue-600 text-white"
-              : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-          }`}
-        >
-          {i}
-        </button>
-      );
+    // For pages 1, 2, 3: show 1 2 3 ... 13 14
+    if (currentPage <= 3) {
+      pages.push(createPageButton(1));
+      pages.push(createPageButton(2));
+      pages.push(createPageButton(3));
+      pages.push(addEllipsis("ellipsis-end"));
+      pages.push(createPageButton(totalPages - 1));
+      pages.push(createPageButton(totalPages));
+    }
+    // For pages near the end (12, 13, 14): show 1 2 ... 12 13 14
+    else if (currentPage >= totalPages - 2) {
+      pages.push(createPageButton(1));
+      pages.push(createPageButton(2));
+      pages.push(addEllipsis("ellipsis-start"));
+      pages.push(createPageButton(totalPages - 2));
+      pages.push(createPageButton(totalPages - 1));
+      pages.push(createPageButton(totalPages));
+    }
+    // For middle pages: show 1 2 ... current-1 current current+1 ... 13 14
+    else {
+      pages.push(createPageButton(1));
+      pages.push(createPageButton(2));
+      pages.push(addEllipsis("ellipsis-start"));
+      pages.push(createPageButton(currentPage - 1));
+      pages.push(createPageButton(currentPage));
+      pages.push(createPageButton(currentPage + 1));
+      pages.push(addEllipsis("ellipsis-end"));
+      pages.push(createPageButton(totalPages - 1));
+      pages.push(createPageButton(totalPages));
     }
 
     return pages;
@@ -340,7 +385,7 @@ const DataTable = ({
                 className="px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
               >
                 <option value={5}>5</option>
-                <option value={10}>10</option>
+                <option value={1}>10</option>
                 <option value={25}>25</option>
                 <option value={50}>50</option>
                 <option value={100}>100</option>
@@ -471,6 +516,6 @@ const DataTable = ({
       )}
     </div>
   );
-};
+});
 
 export default DataTable;

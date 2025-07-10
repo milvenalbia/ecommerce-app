@@ -119,7 +119,9 @@ class ProductController extends Controller implements HasMiddleware
     public function destroy(Product $product)
     {
         if (!$product) {
-            return 'Product not found.';
+            return [
+                'message' => "Product not found."
+            ];;
         }
 
         $message = $product->name . ' deleted successfully.';

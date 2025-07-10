@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import DataTable from "../../components/admin/DataTable";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,8 +9,14 @@ import { toast } from "sonner";
 
 const Product = () => {
   const dispatch = useDispatch();
+  const dataTableRef = useRef();
   const { error } = useSelector((state) => state.error);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [isEdit, setIsEdit] = useState(false);
+  const [productId, setProductId] = useState(0);
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -19,9 +25,6 @@ const Product = () => {
     category_id: 0,
     image_url: "",
   });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [categories, setCategories] = useState([]);
 
   const fetchCategory = async () => {
     try {
@@ -40,19 +43,55 @@ const Product = () => {
   }, []);
 
   const handleAddModal = () => {
+    setIsEdit(false);
     setIsOpen(true);
   };
 
   const handleEdit = (row) => {
-    console.log("Edit user:", row);
-    // Navigate to edit page or open modal
-    // Example: navigate(`/users/${row.id}/edit`);
+    setIsEdit(true);
+
+    setProductId(row.id);
+    setFormData({
+      name: row.name,
+      description: row.description,
+      price: row.price,
+      stock_quantity: row.stock_quantity,
+      category_id: row.category_id,
+      image_url: row.image_url,
+    });
+
+    setIsOpen(true);
   };
 
-  const handleDelete = (row) => {
-    console.log("Delete user:", row);
-    // Call API to delete user
-    // Example: deleteUser(row.id);
+  const handleDelete = async (row) => {
+    try {
+      const res = await api.delete(`/api/products/${row.id}`);
+
+      const data = res.data;
+
+      if (data) {
+        toast.success(data.message || "Deleted successfully.");
+        dataTableRef.current?.fetchData();
+      }
+    } catch (error) {
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 422 && data.errors) {
+          toast.error(
+            data.message || "Something went wrong in deleting the product"
+          );
+        } else if (status === 429) {
+          const message =
+            `${data.message} Try again in a moment.` || "Too many requests.";
+          toast.error(message);
+        } else {
+          toast.error(data.message || "Something went wrong.");
+        }
+      } else {
+        toast.error(data.message || "Network error or server not responding.");
+      }
+    }
   };
 
   const handleView = (row) => {
@@ -66,13 +105,16 @@ const Product = () => {
 
     setIsSubmitting(true);
     try {
-      const res = await api.post("/api/products", formData);
+      const res = await (isEdit
+        ? api.put(`/api/products/${productId}`, formData)
+        : api.post("/api/products", formData));
 
       const data = res.data;
 
       if (data) {
         setIsSubmitting(false);
         toast.success(data.message);
+        dataTableRef.current?.fetchData();
         setIsOpen(false);
         setFormData({
           name: "",
@@ -82,6 +124,9 @@ const Product = () => {
           category_id: 0,
           image_url: "",
         });
+        if (isEdit) {
+          setProductId(0);
+        }
       }
     } catch (error) {
       setIsSubmitting(false);
@@ -107,6 +152,10 @@ const Product = () => {
 
   const closeModal = () => {
     setIsOpen(false);
+    if (isEdit) {
+      setProductId(0);
+      setIsEdit(false);
+    }
 
     dispatch(setError({}));
     setFormData({
@@ -259,6 +308,7 @@ const Product = () => {
           defaultPerPage={5}
           addButton={"Add Product"}
           onAdd={handleAddModal}
+          ref={dataTableRef}
         />
 
         {isOpen && (
@@ -270,15 +320,17 @@ const Product = () => {
             ></div>
 
             {/* Modal Content */}
-            <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-md mx-4 animate-in zoom-in-95 slide-in-from-bottom-5 duration-300 border border-white/20">
+            <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-lg mx-4 duration-300 border border-white/20">
               {/* Decorative gradient border */}
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-400 to-purple-500 rounded-3xl blur opacity-30"></div>
+              {/* <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-400 to-purple-500 rounded-3xl blur opacity-30"></div> */}
 
               <div className="relative bg-white rounded-3xl p-8 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-semibold">Add Product</h1>
+                    <h1 className="text-2xl font-semibold">
+                      {isEdit ? "Edit Product" : "Add Product"}
+                    </h1>
                   </div>
 
                   <button
@@ -383,7 +435,11 @@ const Product = () => {
                     <div className="mt-4 flex justify-end items-center">
                       <button className="primary-btn py-3 px-4 rounded-md">
                         {isSubmitting
-                          ? "Creating Product ..."
+                          ? isEdit
+                            ? "Updating ..."
+                            : "Creating ..."
+                          : isEdit
+                          ? "Update Product"
                           : "Create Product"}
                       </button>
                     </div>
