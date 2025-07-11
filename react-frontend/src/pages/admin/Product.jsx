@@ -1,11 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import Select from "react-select";
 import DataTable from "../../components/admin/DataTable";
 import { useDispatch, useSelector } from "react-redux";
 import GroupField from "../../components/admin/form/GroupField";
 import api from "../../api/axios";
 import { setError } from "../../redux/slices/error";
 import { toast } from "sonner";
+import FormModal from "../../components/admin/FormModal";
 
 const Product = () => {
   const dispatch = useDispatch();
@@ -32,7 +33,7 @@ const Product = () => {
 
       const data = res.data;
 
-      setCategories(data.categories);
+      setCategories(data.data);
     } catch (error) {
       console.log(error);
     }
@@ -98,6 +99,20 @@ const Product = () => {
     console.log("View user:", row);
     // Navigate to view page
     // Example: navigate(`/users/${row.id}`);
+  };
+
+  const toggleStatus = async (row) => {
+    try {
+      const res = await api.put(`/api/products/status/${row.id}`);
+
+      const data = res.data;
+
+      if (data) {
+        toast.success(data.message || "Status updated.");
+      }
+    } catch (error) {
+      toast.error("Something went wrong.");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -236,8 +251,19 @@ const Product = () => {
     {
       key: "description",
       title: "Description",
-      sortable: true,
+      sortable: false,
       width: "w-[15%]",
+      render: (value) => {
+        const maxLength = 16;
+        const display =
+          value?.length > maxLength ? value.slice(0, maxLength) + "..." : value;
+
+        return (
+          <span className="px-2 py-1 rounded-full text-sm font-medium text-wrap">
+            {display}
+          </span>
+        );
+      },
     },
     {
       key: "price",
@@ -269,16 +295,22 @@ const Product = () => {
       title: "Status",
       sortable: true,
       width: "w-[10%]",
-      render: (value) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            value === 1
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {value ? "Active" : "In Active"}
-        </span>
+      render: (value, row) => (
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            className="sr-only peer"
+            defaultChecked={value}
+            onChange={() => toggleStatus(row)}
+          />
+          <div className="group peer bg-white rounded-full duration-300 w-14 h-6 ring-2 ring-red-500 peer-checked:ring-green-500 after:duration-300 after:bg-red-500 peer-checked:after:bg-green-500 after:rounded-full after:absolute after:h-4 after:w-4 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:translate-x-8 peer-hover:after:scale-95"></div>
+          <span className="peer-checked:hidden ml-2 text-sm font-medium text-gray-700">
+            Inactive
+          </span>
+          <span className="peer-checked:inline hidden ml-2 text-sm font-medium text-gray-700">
+            Active
+          </span>
+        </label>
       ),
     },
     {
@@ -312,142 +344,118 @@ const Product = () => {
         />
 
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 h-screen">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300"
-              onClick={closeModal}
-            ></div>
-
-            {/* Modal Content */}
-            <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-lg mx-4 duration-300 border border-white/20">
-              {/* Decorative gradient border */}
-              {/* <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-400 to-purple-500 rounded-3xl blur opacity-30"></div> */}
-
-              <div className="relative bg-white rounded-3xl p-8 max-h-[90vh] overflow-y-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-semibold">
-                      {isEdit ? "Edit Product" : "Add Product"}
-                    </h1>
-                  </div>
-
-                  <button
-                    onClick={closeModal}
-                    className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors duration-200 group"
-                  >
-                    <X className="w-5 h-5 text-gray-500" />
-                  </button>
-                </div>
-
-                {/* Form */}
-                <div className="space-y-6">
-                  <form onSubmit={handleSubmit}>
-                    <GroupField
-                      label={"Product Name"}
-                      labelFor={"name"}
-                      name={"name"}
-                      placeholder={"Enter product name"}
-                      value={formData.name}
-                      onChange={handleChange}
-                    />
-                    {error.name && (
-                      <span className="error">{error.name[0]}</span>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <GroupField
-                        label={"Price"}
-                        labelFor={"price"}
-                        type="number"
-                        min={1}
-                        max={999999999}
-                        className={"w-full"}
-                        name={"price"}
-                        value={formData.price}
-                        onChange={handleChange}
-                      />
-                      {error.price && (
-                        <span className="error">{error.price[0]}</span>
-                      )}
-                      <GroupField
-                        label={"Quantity"}
-                        labelFor={"quantity"}
-                        type="number"
-                        min={1}
-                        max={999999999}
-                        name={"stock_quantity"}
-                        value={formData.stock_quantity}
-                        onChange={handleChange}
-                        className={"w-full"}
-                      />
-                      {error.stock_quantity && (
-                        <span className="error">{error.stock_quantity[0]}</span>
-                      )}
-                    </div>
-                    <GroupField
-                      label={"Image Url"}
-                      labelFor={"image"}
-                      name={"image_url"}
-                      placeholder={"Enter product image url/address"}
-                      value={formData.image_url}
-                      onChange={handleChange}
-                    />
-                    {error.image_url && (
-                      <span className="error">{error.image_url[0]}</span>
-                    )}
-                    <div className="flex flex-col gap-2 mt-4 w-full">
-                      <label htmlFor="category">Product Category</label>
-                      <select
-                        id="category"
-                        name="category_id"
-                        className="input-field-1"
-                        value={formData.category_id}
-                        onChange={inputChange}
-                      >
-                        <option value={0}>Select product category</option>
-                        {categories &&
-                          categories.map((cat) => (
-                            <option key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </option>
-                          ))}
-                      </select>
-                      {error.category_id && (
-                        <span className="error">{error.category_id[0]}</span>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2 mt-4 w-full">
-                      <label htmlFor="description">Description</label>
-                      <textarea
-                        rows={4}
-                        id="description"
-                        name="description"
-                        className="input-field-1"
-                        value={formData.description}
-                        onChange={inputChange}
-                      />
-                      {error.description && (
-                        <span className="error">{error.description[0]}</span>
-                      )}
-                    </div>
-
-                    <div className="mt-4 flex justify-end items-center">
-                      <button className="primary-btn py-3 px-4 rounded-md">
-                        {isSubmitting
-                          ? isEdit
-                            ? "Updating ..."
-                            : "Creating ..."
-                          : isEdit
-                          ? "Update Product"
-                          : "Create Product"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
+          <FormModal closeModal={closeModal} isEdit={isEdit} title={"Product"}>
+            <form onSubmit={handleSubmit}>
+              <GroupField
+                label={"Product Name"}
+                labelFor={"name"}
+                name={"name"}
+                placeholder={"Enter product name"}
+                value={formData.name}
+                onChange={handleChange}
+              />
+              {error.name && <span className="error">{error.name[0]}</span>}
+              <div className="flex items-center gap-2">
+                <GroupField
+                  label={"Price"}
+                  labelFor={"price"}
+                  type="number"
+                  min={1}
+                  max={999999999}
+                  className={"w-full"}
+                  name={"price"}
+                  value={formData.price}
+                  onChange={handleChange}
+                />
+                {error.price && <span className="error">{error.price[0]}</span>}
+                <GroupField
+                  label={"Quantity"}
+                  labelFor={"quantity"}
+                  type="number"
+                  min={1}
+                  max={999999999}
+                  name={"stock_quantity"}
+                  value={formData.stock_quantity}
+                  onChange={handleChange}
+                  className={"w-full"}
+                />
+                {error.stock_quantity && (
+                  <span className="error">{error.stock_quantity[0]}</span>
+                )}
               </div>
-            </div>
-          </div>
+              <GroupField
+                label={"Image Url"}
+                labelFor={"image"}
+                name={"image_url"}
+                placeholder={"Enter product image url/address"}
+                value={formData.image_url}
+                onChange={handleChange}
+              />
+              {error.image_url && (
+                <span className="error">{error.image_url[0]}</span>
+              )}
+              <div className="flex flex-col gap-2 mt-4 w-full">
+                <label htmlFor="category">Product Category</label>
+                <Select
+                  id="category"
+                  name="category_id"
+                  options={categories.map((cat) => ({
+                    value: cat.id,
+                    label: cat.name,
+                  }))}
+                  className="text-sm"
+                  classNamePrefix="react-select"
+                  placeholder="Search or select category"
+                  value={
+                    categories.find((cat) => cat.id === formData.category_id)
+                      ? {
+                          value: formData.category_id,
+                          label: categories.find(
+                            (cat) => cat.id === formData.category_id
+                          ).name,
+                        }
+                      : null
+                  }
+                  onChange={(selected) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      category_id: selected ? selected.value : 0,
+                    }))
+                  }
+                  isClearable
+                />
+                {error.category_id && (
+                  <span className="error">{error.category_id[0]}</span>
+                )}
+              </div>
+              <div className="flex flex-col gap-2 mt-4 w-full">
+                <label htmlFor="description">Description</label>
+                <textarea
+                  rows={4}
+                  id="description"
+                  name="description"
+                  className="input-field-1"
+                  value={formData.description}
+                  onChange={inputChange}
+                />
+                {error.description && (
+                  <span className="error">{error.description[0]}</span>
+                )}
+              </div>
+
+              <div className="mt-4 flex justify-end items-center">
+                <button className="primary-btn py-3 px-4 rounded-md">
+                  {isSubmitting
+                    ? isEdit
+                      ? "Updating ..."
+                      : "Creating ..."
+                    : isEdit
+                    ? "Update Product"
+                    : "Create Product"}
+                </button>
+              </div>
+            </form>
+          </FormModal>
         )}
       </div>
     </div>

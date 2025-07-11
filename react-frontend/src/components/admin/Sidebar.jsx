@@ -1,5 +1,6 @@
 import {
   DollarSign,
+  FolderTree,
   LayoutDashboard,
   LogOut,
   Package,
@@ -21,6 +22,11 @@ const Sidebar = () => {
       name: "Products",
       link: "products",
       icon: <Package />,
+    },
+    {
+      name: "Categories",
+      link: "categories",
+      icon: <FolderTree />,
     },
     {
       name: "Orders",

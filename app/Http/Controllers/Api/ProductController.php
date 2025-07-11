@@ -55,7 +55,6 @@ class ProductController extends Controller implements HasMiddleware
             ->when($dateTo, function ($query, $dateTo) {
                 $query->whereDate('created_at', '<=', $dateTo);
             })
-            ->where('is_active', true)
             ->orderBy($sortBy, $sortDir)
             ->paginate($perPage);
 
@@ -147,7 +146,7 @@ class ProductController extends Controller implements HasMiddleware
 
         return [
             'product' => $product,
-            'message' => 'Product updated successfully.'
+            'message' => 'Product status updated successfully.'
         ];
     }
 

@@ -22,33 +22,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 Route::middleware('throttle:api')->group(function () {
     Route::apiResource('/categories', CategoryController::class);
     Route::apiResource('/products', ProductController::class);
-    Route::put('products/status/{product}', [ProductController::class, 'updateStatus']);
-    Route::post('products/carts/{product}', [ProductController::class, 'addToCart']);
-    Route::put('products/carts/{cart}', [ProductController::class, 'updateQuantity']);
+    Route::put('products/status/{product}', [ProductController::class, 'updateStatus'])->middleware('auth:sanctum');
+    Route::post('products/carts/{product}', [ProductController::class, 'addToCart'])->middleware('auth:sanctum');
+    Route::put('products/carts/{cart}', [ProductController::class, 'updateQuantity'])->middleware('auth:sanctum');
     Route::apiResource('/users', UserController::class)->middleware('auth:sanctum');
     Route::apiResource('/shipping-address', ShippingAddressController::class)->middleware('auth:sanctum');
 });
-
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
-
-// Route::post('/register', [AuthController::class, 'register']);
-
-// Route::post('/login', [AuthController::class, 'login']);
-
-// Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-
-// Route::apiResource('/categories', CategoryController::class);
-
-// Route::apiResource('/products', ProductController::class);
-
-// Route::put('products/status/{product}', [ProductController::class, 'updateStatus']);
-
-// Route::post('products/carts/{product}', [ProductController::class, 'addToCart']);
-
-// Route::put('products/carts/{cart}', [ProductController::class, 'updateQuantity']);
-
-// Route::apiResource('/users', UserController::class)->middleware('auth:sanctum');
-
-// Route::apiResource('/shipping-address', ShippingAddressController::class)->middleware('auth:sanctum');

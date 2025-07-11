@@ -13,6 +13,7 @@ import GuestOnlyRoutes from "./pretected_route/GuestOnlyRoutes";
 import Loading from "./components/Loading";
 import { useAuthStore } from "./store/authStore";
 import Product from "./pages/admin/Product";
+import Category from "./pages/admin/Category";
 
 function App() {
   const { user, fetchUser, isLoading } = useAuthStore();
@@ -68,6 +69,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<Product />} />
+          <Route path="categories" element={<Category />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

@@ -22,15 +22,39 @@ class CategoryController extends Controller implements HasMiddleware
 
     public function index(Request $request)
     {
-        $name = $request->input('name');
+        $search     = $request->input('search');
+        $category   = $request->input('category');
+        $dateFrom   = $request->input('date_from');
+        $dateTo     = $request->input('date_to');
+        $sortBy     = $request->input('sort_by', 'created_at');
+        $sortDir    = $request->input('sort_dir', 'desc');
+        $perPage    = $request->input('per_page', 10);
 
-        $categories = Category::where('name', 'LIKE', "%{$name}%")->get();
-
-        if(count($categories) < 1){
-            return 'No category data found.';
+        // Optional: whitelist sortable columns to prevent SQL injection
+        $sortableColumns = ['id', 'name', 'created_at',];
+        if (!in_array($sortBy, $sortableColumns)) {
+            $sortBy = 'created_at';
         }
 
-        return ['categories' => $categories];
+        $categories = Category::when($search, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('description', 'LIKE', "%{$search}%");
+            });
+        })
+            ->when($category, function ($query, $category) {
+                $query->where('category_id', $category);
+            })
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            })
+            ->orderBy($sortBy, $sortDir)
+            ->paginate($perPage);
+
+        return $categories;
     }
 
     /**
@@ -85,10 +109,10 @@ class CategoryController extends Controller implements HasMiddleware
      */
     public function destroy(Category $category)
     {
-        if(!$category){
+        if (!$category) {
             return 'Category not found.';
         }
-        
+
         $message = $category->name . ' deleted successfully.';
 
         $category->delete();

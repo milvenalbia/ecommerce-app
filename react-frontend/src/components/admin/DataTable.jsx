@@ -356,18 +356,15 @@ const DataTable = forwardRef((props, ref) => {
             <div className="flex items-center gap-2">
               <Calendar className="text-gray-400 w-4 h-4" />
               <DatePicker
-                selected={dateFrom}
-                onChange={(date) => setDateFrom(date)}
-                className="px-3 py-2 border border-gray-300 outline-none rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                placeholderText="From"
-                dateFormat="yyyy-MM-dd"
-              />
-              <span className="text-gray-500">to</span>
-              <DatePicker
-                selected={dateTo}
-                onChange={(date) => setDateTo(date)}
-                className="px-3 py-2 border border-gray-300 outline-none rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                placeholderText="To"
+                selectsRange
+                startDate={dateFrom}
+                endDate={dateTo}
+                onChange={([start, end]) => {
+                  setDateFrom(start);
+                  setDateTo(end);
+                }}
+                className="px-3 py-2 border border-gray-300 outline-none rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm w-60"
+                placeholderText="Select date range"
                 dateFormat="yyyy-MM-dd"
               />
             </div>
@@ -385,7 +382,7 @@ const DataTable = forwardRef((props, ref) => {
                 className="px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
               >
                 <option value={5}>5</option>
-                <option value={1}>10</option>
+                <option value={10}>10</option>
                 <option value={25}>25</option>
                 <option value={50}>50</option>
                 <option value={100}>100</option>

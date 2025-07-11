@@ -12,6 +12,7 @@ const Header = () => {
   const pageTitles = {
     "/admin/dashboard": "Dashboard",
     "/admin/products": "Products",
+    "/admin/categories": "Categories",
     "/admin/orders": "Orders",
     "/admin/payments": "Payments",
     "/admin/reports": "Order Reports",
@@ -51,7 +52,7 @@ const Header = () => {
     return () => clearInterval(interval);
   }, []);
   return (
-    <header className="w-full h-20 sticky top-3">
+    <header className="w-full h-20 sticky top-3 z-50">
       <div className="bg-white shadow-md w-full h-20 rounded-lg flex justify-between items-center px-5">
         <h1 className="text-2xl font-bold text-black">
           {getCurrentPageTitle()}
