@@ -273,7 +273,7 @@ const Product = () => {
       render: (value) =>
         new Intl.NumberFormat("en-US", {
           style: "currency",
-          currency: "PHP", // Change to PHP if needed
+          currency: "PHP", // Change to USD if needed
           minimumFractionDigits: 2,
         }).format(value),
     },

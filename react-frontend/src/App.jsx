@@ -14,6 +14,7 @@ import Loading from "./components/Loading";
 import { useAuthStore } from "./store/authStore";
 import Product from "./pages/admin/Product";
 import Category from "./pages/admin/Category";
+import Orders from "./pages/admin/Orders";
 
 function App() {
   const { user, fetchUser, isLoading } = useAuthStore();
@@ -70,6 +71,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<Product />} />
           <Route path="categories" element={<Category />} />
+          <Route path="orders" element={<Orders />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

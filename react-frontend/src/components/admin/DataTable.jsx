@@ -17,6 +17,7 @@ import {
   Trash2,
   MoreHorizontal,
   Plus,
+  Eye,
 } from "lucide-react";
 import api from "../../api/axios";
 
@@ -33,6 +34,7 @@ const DataTable = forwardRef((props, ref) => {
     showActions = true,
     onEdit = null,
     onDelete = null,
+    onView = null,
     onCustomAction = null,
     customActions = [],
     addButton = null,
@@ -51,8 +53,10 @@ const DataTable = forwardRef((props, ref) => {
   const [sortDirection, setSortDirection] = useState("asc");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async ({ status = false } = {}) => {
+    if (!status) {
+      setLoading(true);
+    }
     try {
       const params = {
         page: currentPage,
@@ -152,6 +156,12 @@ const DataTable = forwardRef((props, ref) => {
     }
   };
 
+  const handleView = (row) => {
+    if (onView) {
+      onView(row);
+    }
+  };
+
   const handleEdit = (row) => {
     if (onEdit) {
       onEdit(row);
@@ -171,20 +181,33 @@ const DataTable = forwardRef((props, ref) => {
   };
 
   const renderActionButtons = (row) => {
-    const hasDefaultActions = onEdit || onDelete;
+    const hasDefaultActions = onEdit || onDelete || onView;
     const hasCustomActions = customActions && customActions.length > 0;
 
     if (!hasDefaultActions && !hasCustomActions) return null;
 
     return (
       <div className="flex items-center gap-1">
+        {onView && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleView(row);
+            }}
+            className="p-1.5 text-purple-600 hover:text-purple-800 hover:bg-purple-100 rounded-md transition-colors"
+            title="View"
+          >
+            <Eye className="w-5.5 h-5.5" />
+          </button>
+        )}
+
         {onEdit && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleEdit(row);
             }}
-            className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+            className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-md transition-colors"
             title="Edit"
           >
             <Edit className="w-5 h-5" />
@@ -197,7 +220,7 @@ const DataTable = forwardRef((props, ref) => {
               e.stopPropagation();
               handleDelete(row);
             }}
-            className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+            className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-md transition-colors"
             title="Delete"
           >
             <Trash2 className="w-5 h-5" />
@@ -397,9 +420,9 @@ const DataTable = forwardRef((props, ref) => {
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              {finalColumns.map((column) => (
+              {finalColumns.map((column, index) => (
                 <th
-                  key={column.key}
+                  key={index}
                   className={`px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider ${
                     column.width || ""
                   } ${
@@ -460,9 +483,9 @@ const DataTable = forwardRef((props, ref) => {
                   key={row.id || index}
                   className={`hover:bg-gray-50 transition-colors`}
                 >
-                  {displayColumns.map((column) => (
+                  {displayColumns.map((column, index) => (
                     <td
-                      key={column.key}
+                      key={index}
                       className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
                     >
                       {column.render

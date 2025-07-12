@@ -16,13 +16,11 @@ class UserController extends Controller
 
         $users = User::with('shippingAddresses')->where('name', 'LIKE', "%{$name}%")->get();
 
-        if(count($users) < 1){
+        if (count($users) < 1) {
             return 'No users found.';
         }
 
-        return [
-            'users' => $users
-        ];
+        return $users;
     }
 
     /**
@@ -81,8 +79,8 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        
-        if(!$user){
+
+        if (!$user) {
             return 'User not found.';
         }
 
