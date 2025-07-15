@@ -4,21 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class CategoryController extends Controller implements HasMiddleware
+class CategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('auth:sanctum', except: ['index'])
-        ];
-    }
 
     public function index(Request $request)
     {
@@ -53,6 +44,14 @@ class CategoryController extends Controller implements HasMiddleware
             })
             ->orderBy($sortBy, $sortDir)
             ->paginate($perPage);
+
+        return $categories;
+    }
+
+    public function categories()
+    {
+
+        $categories = Category::select('id', 'name')->get();
 
         return $categories;
     }

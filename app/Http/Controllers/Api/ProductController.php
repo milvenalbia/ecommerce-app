@@ -27,11 +27,14 @@ class ProductController extends Controller implements HasMiddleware
     {
         $search     = $request->input('search');
         $category   = $request->input('category');
-        $dateFrom   = $request->input('date_from');
-        $dateTo     = $request->input('date_to');
         $sortBy     = $request->input('sort_by', 'created_at');
         $sortDir    = $request->input('sort_dir', 'desc');
         $perPage    = $request->input('per_page', 10);
+        $dateFrom   = $request->input('date_from');
+        $dateTo     = $request->input('date_to');
+        $priceFrom   = $request->input('price_from') ?? null;
+        $priceTo     = $request->input('price_to') ?? null;
+
 
         // Optional: whitelist sortable columns to prevent SQL injection
         $sortableColumns = ['id', 'name', 'price', 'created_at', 'stock_quantity'];
@@ -47,13 +50,23 @@ class ProductController extends Controller implements HasMiddleware
                 });
             })
             ->when($category, function ($query, $category) {
-                $query->where('category_id', $category);
+                if (is_array($category)) {
+                    $query->whereIn('category_id', $category);
+                } else {
+                    $query->where('category_id', $category);
+                }
             })
             ->when($dateFrom, function ($query, $dateFrom) {
                 $query->whereDate('created_at', '>=', $dateFrom);
             })
             ->when($dateTo, function ($query, $dateTo) {
                 $query->whereDate('created_at', '<=', $dateTo);
+            })
+            ->when($priceFrom, function ($query, $priceFrom) {
+                $query->where('price', '>=', $priceFrom);
+            })
+            ->when($priceTo, function ($query, $priceTo) {
+                $query->where('price', '<=', $priceTo);
             })
             ->orderBy($sortBy, $sortDir)
             ->paginate($perPage);
@@ -150,6 +163,17 @@ class ProductController extends Controller implements HasMiddleware
         ];
     }
 
+    public function cartItems(Request $request)
+    {
+        $user_id = $request->user()->id;
+
+        $carts = Cart::with('product')
+            ->where('user_id', $user_id)
+            ->get();
+
+        return $carts;
+    }
+
     public function addToCart(Request $request, Product $product)
     {
         $user_id = $request->user()->id;
@@ -162,32 +186,52 @@ class ProductController extends Controller implements HasMiddleware
         $cart = Cart::where('user_id', $user_id)->where('product_id', $product->id)->first();
 
         //Check if user add the same product
+
         if ($cart) {
             $cart->update([
                 'quantity' => $cart->quantity + 1,
             ]);
-
-            return [
-                'message' => 'Added successfully.',
-                'cart' => $cart
-            ];
+        } else {
+            Cart::create([
+                'user_id' => $user_id,
+                'product_id' => $product->id,
+                'quantity' => 1,
+                'price' => $product->price
+            ]);
         }
 
-        $newCart = Cart::create([
-            'user_id' => $user_id,
-            'product_id' => $product->id,
-            'quantity' => 1,
-            'price' => $product->price
-        ]);
+        $userCartCount = Cart::where('user_id', $user_id)->count();
 
         return [
             'message' => 'Added successfully.',
-            'cart' => $newCart
+            'totalItems' => $userCartCount
+        ];
+    }
+
+    public function deleteCart(Request $request, Cart $cart)
+    {
+        $user_id = $request->user()->id;
+
+        $cart->delete();
+
+        $carts = Cart::with('product')
+            ->where('user_id', $user_id)
+            ->get();
+
+        $totalItems = $carts->count();
+
+        return [
+            'message' => 'Item removed',
+            'carts' => $carts,
+            'totalItems' => $totalItems,
         ];
     }
 
     public function updateQuantity(Request $request, Cart $cart)
     {
+
+        $user_id = $request->user()->id;
+
         if (!$cart) {
             throw new NotFoundHttpException();
         }
@@ -200,9 +244,23 @@ class ProductController extends Controller implements HasMiddleware
             'quantity' => $fields['quantity']
         ]);
 
+        $cart->load('product');
+
         return  [
             'message' => 'Updated successfully.',
             'cart' => $cart
         ];
+
+        // $carts = Cart::with('product')
+        //     ->where('user_id', $user_id)
+        //     ->get();
+
+        // $totalItems = $carts->count();
+
+        // return [
+        //     'message' => 'Updated successfully.',
+        //     'carts' => $carts,
+        //     'totalItems' => $totalItems,
+        // ];
     }
 }

@@ -15,6 +15,8 @@ import { useAuthStore } from "./store/authStore";
 import Product from "./pages/admin/Product";
 import Category from "./pages/admin/Category";
 import Orders from "./pages/admin/Orders";
+import ShoppingCart from "./pages/guest/ShoppingCart";
+import GuestProtectedRoute from "./pretected_route/GuestProtectedRoute";
 
 function App() {
   const { user, fetchUser, isLoading } = useAuthStore();
@@ -45,6 +47,14 @@ function App() {
             <GuestOnlyRoutes>
               <SignUp />
             </GuestOnlyRoutes>
+          }
+        />
+        <Route
+          path="/carts"
+          element={
+            <GuestProtectedRoute>
+              <ShoppingCart />
+            </GuestProtectedRoute>
           }
         />
 

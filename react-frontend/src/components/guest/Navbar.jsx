@@ -1,44 +1,65 @@
 import React, { useState } from "react";
 import { Link } from "react-router";
-import { Heart, ShoppingBag, Menu, X } from "lucide-react";
+import {
+  Heart,
+  ShoppingBag,
+  Menu,
+  X,
+  User,
+  LogOut,
+  Home,
+  ShoppingCart,
+} from "lucide-react";
 import { useAuthStore } from "../../store/authStore.js";
+import { useCartStore } from "../../store/cartStore.js";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuthStore();
+  const { totalItems } = useCartStore();
 
   const navigationItems = [
     {
-      name: "Featured",
-      link: "#",
+      name: "Home",
+      link: "/",
+      icon: <Home size={20} />,
     },
     {
-      name: "Men",
+      name: "Shop",
       link: "#",
+      icon: <ShoppingBag size={20} />,
     },
-    {
-      name: "Women",
-      link: "#",
-    },
-    {
-      name: "Shoes",
-      link: "#",
-    },
-    {
-      name: "Phones",
-      link: "#",
-    },
+    // {
+    //   name: "Featured",
+    //   link: "#",
+    // },
+    // {
+    //   name: "Men",
+    //   link: "#",
+    // },
+    // {
+    //   name: "Women",
+    //   link: "#",
+    // },
+    // {
+    //   name: "Shoes",
+    //   link: "#",
+    // },
+    // {
+    //   name: "Phones",
+    //   link: "#",
+    // },
   ];
 
   return (
-    <nav className="bg-[#1f1f21] text-white sticky top-0 z-50">
+    <nav className="bg-white text-black sticky top-0 z-50 shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-18">
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <div className="flex-shrink-0">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-purple-500 rounded flex items-center justify-center">
                   <ShoppingBag className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-lg font-semibold">Shopping</span>
@@ -53,7 +74,7 @@ const Navbar = () => {
                 <Link
                   key={index}
                   to={item.link}
-                  className="text-white hover:text-gray-300 px-3 py-2 text-[16px] font-semibold transition-colors duration-200 hover:bg-gray-800 rounded-md"
+                  className="text-black hover:text-gray-200 px-3 py-2 text-[18px] font-semibold transition-colors duration-200 hover:bg-gray-800 rounded-md inline-flex gap-1 items-center"
                 >
                   {item.name}
                 </Link>
@@ -63,14 +84,30 @@ const Navbar = () => {
 
           {/* Right Side Icons */}
           <div className="flex items-center space-x-4">
+            {/* Shopping Bag */}
+            <Link
+              to={"/carts"}
+              className="p-2 rounded-md text-black hover:text-white hover:bg-gray-800 transition-colors relative cursor-pointer"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
             <div className="flex items-center gap-4">
               {user ? (
                 <>
-                  <p className="text-sm font-semibold">{user.name}</p>
+                  <p className="text-sm font-semibold inline-flex items-center gap-1">
+                    <User />
+                    {user.name}
+                  </p>
                   <button
                     onClick={logout}
-                    className="text-sm font-semibold hover:text-gray-300"
+                    className="text-sm font-semibold hover:text-gray-500 inline-flex items-center gap-1 cursor-pointer"
                   >
+                    <LogOut />
                     Logout
                   </button>
                 </>
@@ -78,27 +115,19 @@ const Navbar = () => {
                 <>
                   <Link
                     to="/login"
-                    className="text-sm font-semibold hover:text-gray-300"
+                    className="text-sm font-semibold hover:text-gray-500"
                   >
                     Sign In
                   </Link>
                   <Link
                     to="/signup"
-                    className="text-sm font-semibold hover:text-gray-300"
+                    className="text-sm font-semibold hover:text-gray-500"
                   >
                     Sign Up
                   </Link>
                 </>
               )}
             </div>
-
-            {/* Shopping Bag */}
-            <button className="p-2 rounded-md text-white hover:text-gray-300 hover:bg-gray-800 transition-colors relative">
-              <ShoppingBag className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                3
-              </span>
-            </button>
 
             {/* Mobile menu button */}
             <button
@@ -135,7 +164,7 @@ const Navbar = () => {
           ))}
 
           {/* Mobile Wishlist */}
-          <button className="sm:hidden w-full text-left text-white hover:text-gray-300 hover:bg-gray-800 px-3 py-2 text-base font-medium rounded-md transition-colors flex items-center justify-between">
+          {/* <button className="sm:hidden w-full text-left text-white hover:text-gray-300 hover:bg-gray-800 px-3 py-2 text-base font-medium rounded-md transition-colors flex items-center justify-between">
             <span className="flex items-center">
               <Heart className="h-5 w-5 mr-3" />
               Wishlist
@@ -143,7 +172,7 @@ const Navbar = () => {
             <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
               2
             </span>
-          </button>
+          </button> */}
         </div>
       </div>
 
