@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
-import { RefreshCw, ShoppingBag, Tag } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ShoppingBag, Tag } from "lucide-react";
 import { Link } from "react-router";
 import Navbar from "../../components/guest/Navbar";
 import Carts from "../../components/guest/Carts";
+import SmallLoading from "../../components/SmallLoading";
 import { useCartStore } from "../../store/cartStore";
-import api from "../../api/axios";
-import { toast } from "sonner";
 
 const ShoppingCart = () => {
   const {
     fetchCartItems,
     items,
+    setItems,
     isLoading,
     removeCartItem,
     updateCartQuantity,
@@ -22,13 +22,40 @@ const ShoppingCart = () => {
 
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
+  const [debounceQuantity, setDebounceQuantity] = useState();
+
+  // const updateQuantity = (id, newQuantity) => {
+  //   if (newQuantity <= 0) {
+  //     removeCartItem(id);
+  //   } else {
+  //     updateCartQuantity(id, newQuantity);
+  //   }
+  // };
+
+  const debounceTimers = useRef({});
 
   const updateQuantity = (id, newQuantity) => {
-    if (newQuantity === 0) {
-      removeCartItem(id);
-    } else {
-      updateCartQuantity(id, newQuantity);
+    // Instantly update the UI
+    setItems(
+      items.map((item) =>
+        item.id === id ? { ...item, quantity: newQuantity } : item
+      )
+    );
+
+    // Clear previous timer
+    if (debounceTimers.current[id]) {
+      clearTimeout(debounceTimers.current[id]);
     }
+
+    // Set new debounce timer
+    debounceTimers.current[id] = setTimeout(() => {
+      if (newQuantity <= 0) {
+        removeCartItem(id);
+      } else {
+        updateCartQuantity(id, newQuantity);
+      }
+      delete debounceTimers.current[id];
+    }, 500);
   };
 
   const removeItem = async (id) => {
@@ -49,7 +76,7 @@ const ShoppingCart = () => {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const shipping = subtotal > 100 ? 0 : 9.99;
+  const shipping = items.length > 0 ? (subtotal > 100 ? 0 : 9.99) : 0.0;
   const tax = subtotal * 0.08;
 
   let discount = 0;
@@ -85,10 +112,7 @@ const ShoppingCart = () => {
                   </div>
 
                   {isLoading ? (
-                    <div className="flex items-center justify-center h-96">
-                      <RefreshCw className="w-6 h-6 text-blue-600 animate-spin mr-2" />
-                      <span className="text-gray-500">Loading...</span>
-                    </div>
+                    <SmallLoading height={"h-96"} />
                   ) : items.length > 0 ? (
                     <Carts
                       cartItems={items}
@@ -97,7 +121,7 @@ const ShoppingCart = () => {
                     />
                   ) : (
                     <div className="max-w-4xl mx-auto p-6">
-                      <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+                      <div className="bg-white rounded-2xl p-8 text-center">
                         <ShoppingBag className="mx-auto h-16 w-16 text-gray-400 mb-4" />
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">
                           Your cart is empty

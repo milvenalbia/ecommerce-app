@@ -7,9 +7,10 @@ import { useCartStore } from "../../store/cartStore";
 import { useAuthStore } from "../../store/authStore";
 import { Link } from "react-router";
 import Modal from "./Modal";
+import SmallLoading from "../SmallLoading";
 
 const ProductList = () => {
-  const { addToCart } = useCartStore();
+  const { addToCart, fetchCartItems } = useCartStore();
   const { user } = useAuthStore();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -91,6 +92,10 @@ const ProductList = () => {
   };
 
   useEffect(() => {
+    fetchCartItems();
+  }, []);
+
+  useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
     }, 500);
@@ -144,10 +149,7 @@ const ProductList = () => {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center">
-            <RefreshCw className="w-6 h-6 text-blue-600 animate-spin mr-2" />
-            <span className="text-gray-500">Loading...</span>
-          </div>
+          <SmallLoading />
         ) : products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {products.map((product) => (

@@ -2,6 +2,7 @@ import { ChevronDown, Filter, RefreshCw } from "lucide-react";
 import { use, useEffect, useState } from "react";
 import api from "../../api/axios";
 import { toast } from "sonner";
+import SmallLoading from "../SmallLoading";
 
 const FilterBar = ({
   isFilterOpen = false,
@@ -102,11 +103,7 @@ const FilterBar = ({
                     </label>
                   </div>
                 ))
-              : loading && (
-                  <div className="flex items-center justify-center">
-                    <RefreshCw className="w-6 h-6 text-blue-600 animate-spin mr-2" />
-                  </div>
-                )}
+              : loading && <SmallLoading />}
           </div>
         </div>
 

@@ -22,14 +22,21 @@ export const useCartStore = create(
       totalItems: 0,
       isLoading: false,
 
+      setItems: (newItems) => set({ items: newItems }),
+      setTotalItems: (newTotal) => set({ totalItems: newTotal }),
+
       fetchCartItems: async () => {
         set({ isLoading: true });
 
         try {
-          const res = await api.get("api/products/carts");
+          const res = await api.get("api/carts");
           const data = res.data;
 
-          set({ items: data, isLoading: false });
+          set({
+            items: data.carts,
+            totalItems: data.totalItems,
+            isLoading: false,
+          });
         } catch (err) {
           if (err.response) {
             const { status } = err.response;
@@ -89,7 +96,7 @@ export const useCartStore = create(
 
       removeCartItem: async (cart_id) => {
         try {
-          const res = await api.delete(`/api/products/carts/${cart_id}`);
+          const res = await api.delete(`/api/carts/${cart_id}`);
 
           const data = res.data;
 
@@ -125,7 +132,7 @@ export const useCartStore = create(
 
       updateCartQuantity: async (cart_id, newQuantity) => {
         try {
-          const res = await api.put(`/api/products/carts/${cart_id}`, {
+          const res = await api.put(`/api/carts/${cart_id}`, {
             quantity: newQuantity,
           });
 
@@ -137,6 +144,7 @@ export const useCartStore = create(
                 item.id === cart_id ? data.cart : item
               ),
             }));
+            set({ totalItems: data.totalItems });
             toast.success(data.message || "Updated successfully");
           }
         } catch (error) {

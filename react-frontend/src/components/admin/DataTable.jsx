@@ -20,6 +20,7 @@ import {
   Eye,
 } from "lucide-react";
 import api from "../../api/axios";
+import SmallLoading from "../SmallLoading";
 
 const DataTable = forwardRef((props, ref) => {
   const {
@@ -462,10 +463,7 @@ const DataTable = forwardRef((props, ref) => {
                   colSpan={finalColumns.length}
                   className="px-6 py-12 text-center"
                 >
-                  <div className="flex items-center justify-center">
-                    <RefreshCw className="w-6 h-6 text-blue-600 animate-spin mr-2" />
-                    <span className="text-gray-500">Loading...</span>
-                  </div>
+                  <SmallLoading />
                 </td>
               </tr>
             ) : data.length === 0 ? (

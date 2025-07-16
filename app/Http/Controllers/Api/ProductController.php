@@ -163,17 +163,6 @@ class ProductController extends Controller implements HasMiddleware
         ];
     }
 
-    public function cartItems(Request $request)
-    {
-        $user_id = $request->user()->id;
-
-        $carts = Cart::with('product')
-            ->where('user_id', $user_id)
-            ->get();
-
-        return $carts;
-    }
-
     public function addToCart(Request $request, Product $product)
     {
         $user_id = $request->user()->id;
@@ -200,67 +189,11 @@ class ProductController extends Controller implements HasMiddleware
             ]);
         }
 
-        $userCartCount = Cart::where('user_id', $user_id)->count();
+        $userCartCount = Cart::where('user_id', $user_id)->sum('quantity');
 
         return [
             'message' => 'Added successfully.',
             'totalItems' => $userCartCount
         ];
-    }
-
-    public function deleteCart(Request $request, Cart $cart)
-    {
-        $user_id = $request->user()->id;
-
-        $cart->delete();
-
-        $carts = Cart::with('product')
-            ->where('user_id', $user_id)
-            ->get();
-
-        $totalItems = $carts->count();
-
-        return [
-            'message' => 'Item removed',
-            'carts' => $carts,
-            'totalItems' => $totalItems,
-        ];
-    }
-
-    public function updateQuantity(Request $request, Cart $cart)
-    {
-
-        $user_id = $request->user()->id;
-
-        if (!$cart) {
-            throw new NotFoundHttpException();
-        }
-
-        $fields = $request->validate([
-            'quantity' => 'required|numeric|min:1',
-        ]);
-
-        $cart->update([
-            'quantity' => $fields['quantity']
-        ]);
-
-        $cart->load('product');
-
-        return  [
-            'message' => 'Updated successfully.',
-            'cart' => $cart
-        ];
-
-        // $carts = Cart::with('product')
-        //     ->where('user_id', $user_id)
-        //     ->get();
-
-        // $totalItems = $carts->count();
-
-        // return [
-        //     'message' => 'Updated successfully.',
-        //     'carts' => $carts,
-        //     'totalItems' => $totalItems,
-        // ];
     }
 }

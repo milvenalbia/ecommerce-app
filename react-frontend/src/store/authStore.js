@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import CryptoJS from "crypto-js";
 import api from "../api/axios";
 import { toast } from "sonner";
+import { useCartStore } from "./cartStore";
 
 // Optional: use env or hardcode for dev (not safe for production frontend)
 const SECRET_KEY = import.meta.env.VITE_SECRET_KEY;
@@ -61,7 +62,10 @@ export const useAuthStore = create(
 
         set({ user: null, isLoading: false });
 
+        const { setTotalItems } = useCartStore.getState();
+        setTotalItems(0);
         localStorage.removeItem("auth-storage");
+        localStorage.removeItem("totalItems");
       },
     }),
     {
