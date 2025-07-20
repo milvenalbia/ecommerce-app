@@ -21,7 +21,7 @@ const Carts = ({ cartItems, updateQuantity, removeItem }) => {
                 <span>Size: {item.size}</span>
               </div> */}
               <p className="text-xl font-bold text-gray-900 mt-2">
-                ₱{Number(item.price).toLocaleString()}
+                ${Number(item.price).toLocaleString()}
               </p>
             </div>
 

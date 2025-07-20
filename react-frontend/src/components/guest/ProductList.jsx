@@ -175,7 +175,7 @@ const ProductList = () => {
                   </h3>
                   <div className="flex items-center space-x-2 mb-2">
                     <span className="text-lg font-bold text-purple-600">
-                      ₱{Number(product.price).toLocaleString()}
+                      ${Number(product.price).toLocaleString()}
                     </span>
                     {/* <span className="text-sm text-gray-500 line-through">
                     ${product.originalPrice}

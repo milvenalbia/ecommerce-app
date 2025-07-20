@@ -11,10 +11,10 @@ class Payment extends Model
     /** @use HasFactory<\Database\Factories\PaymentFactory> */
     use HasFactory;
 
-    
+
     protected $fillable = [
         'order_id',
-        'paymnet_method',
+        'payment_method',
         'amount',
         'status',
         'transaction_id',
@@ -25,5 +25,4 @@ class Payment extends Model
     {
         return $this->belongsTo(Order::class);
     }
-
 }

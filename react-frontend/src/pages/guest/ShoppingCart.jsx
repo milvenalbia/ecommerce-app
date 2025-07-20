@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { ShoppingBag, Tag } from "lucide-react";
 import { Link } from "react-router";
+import { CheckoutProvider, Elements } from "@stripe/react-stripe-js";
 import Navbar from "../../components/guest/Navbar";
 import Carts from "../../components/guest/Carts";
 import SmallLoading from "../../components/SmallLoading";
 import { useCartStore } from "../../store/cartStore";
+import Modal from "../../components/guest/Modal";
+import CheckoutForm from "../../components/guest/CheckoutForm";
+import stripePromise from "../../utils/stripe";
+import api from "../../api/axios";
 
 const ShoppingCart = () => {
   const {
@@ -20,9 +25,11 @@ const ShoppingCart = () => {
     fetchCartItems();
   }, []);
 
+  const [isOpen, setIsOpen] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [debounceQuantity, setDebounceQuantity] = useState();
+  const [clientSecret, setClientSecret] = useState("");
 
   // const updateQuantity = (id, newQuantity) => {
   //   if (newQuantity <= 0) {
@@ -33,6 +40,10 @@ const ShoppingCart = () => {
   // };
 
   const debounceTimers = useRef({});
+
+  const options = {
+    clientSecret,
+  };
 
   const updateQuantity = (id, newQuantity) => {
     // Instantly update the UI
@@ -56,6 +67,10 @@ const ShoppingCart = () => {
       }
       delete debounceTimers.current[id];
     }, 500);
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
   };
 
   const removeItem = async (id) => {
@@ -88,6 +103,18 @@ const ShoppingCart = () => {
   }
 
   const total = subtotal + shipping + tax - discount;
+
+  const handleOpenModal = () => {
+    api
+      .post("api/create-payment-intent", { amount: total })
+      .then((res) => {
+        setClientSecret(res.data.clientSecret);
+        setIsOpen(true);
+      })
+      .catch((error) => {
+        console.error("Failed to create payment intent:", error);
+      });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -186,7 +213,7 @@ const ShoppingCart = () => {
                       <span>
                         {isLoading
                           ? "Loading..."
-                          : `₱${subtotal.toLocaleString(2)}`}
+                          : `$${subtotal.toLocaleString(2)}`}
                       </span>
                     </div>
 
@@ -197,21 +224,21 @@ const ShoppingCart = () => {
                           ? "Loading..."
                           : shipping === 0
                           ? "Free"
-                          : `₱${shipping.toLocaleString(2)}`}
+                          : `$${shipping.toLocaleString(2)}`}
                       </span>
                     </div>
 
                     <div className="flex justify-between text-gray-600">
                       <span>Tax</span>
                       <span>
-                        {isLoading ? "Loading..." : `₱${tax.toLocaleString(2)}`}
+                        {isLoading ? "Loading..." : `$${tax.toLocaleString(2)}`}
                       </span>
                     </div>
 
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>Discount</span>
-                        <span>-₱{discount.toLocaleString(2)}</span>
+                        <span>-${discount.toLocaleString(2)}</span>
                       </div>
                     )}
 
@@ -221,7 +248,7 @@ const ShoppingCart = () => {
                         <span>
                           {isLoading
                             ? "Loading..."
-                            : `₱${total.toLocaleString(2)}`}
+                            : `$${total.toLocaleString(2)}`}
                         </span>
                       </div>
                     </div>
@@ -231,14 +258,17 @@ const ShoppingCart = () => {
                   {shipping > 0 && (
                     <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                       <p className="text-sm text-blue-700">
-                        Add ₱{(100 - subtotal).toLocaleString(2)} more for free
+                        Add ${(100 - subtotal).toLocaleString(2)} more for free
                         shipping!
                       </p>
                     </div>
                   )}
 
                   {/* Checkout Button */}
-                  <button className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors mb-3">
+                  <button
+                    onClick={handleOpenModal}
+                    className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors mb-3"
+                  >
                     Proceed to Checkout
                   </button>
 
@@ -251,6 +281,14 @@ const ShoppingCart = () => {
           </div>
         </div>
       </div>
+
+      {isOpen && clientSecret && (
+        <Modal title={"Checkout Form"} closeModal={closeModal}>
+          <Elements stripe={stripePromise} options={options}>
+            <CheckoutForm setIsOpen={setIsOpen} />
+          </Elements>
+        </Modal>
+      )}
     </div>
   );
 };

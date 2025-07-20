@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class OrderItem extends Model
 {
 
+    public $timestamps = false;
+
     protected $fillable = [
         'order_id',
         'product_id',
@@ -15,7 +17,7 @@ class OrderItem extends Model
         'price_at_purchase'
     ];
 
-    public function order(): BelongsTo 
+    public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
     }
