@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import Home from "./pages/guest/Home";
 import Login from "./pages/guest/Login";
 import SignUp from "./pages/guest/SignUp";
-import AdminLayout from "./components/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/Login";
@@ -17,6 +16,10 @@ import Category from "./pages/admin/Category";
 import Orders from "./pages/admin/Orders";
 import ShoppingCart from "./pages/guest/ShoppingCart";
 import GuestProtectedRoute from "./pretected_route/GuestProtectedRoute";
+import AdminLayout from "./layouts/AdminLayout";
+import Shop from "./pages/guest/Shop";
+import GuestLayout from "./layouts/GuestLayout";
+import Payment from "./pages/admin/Payment";
 
 function App() {
   const { user, fetchUser, isLoading } = useAuthStore();
@@ -30,7 +33,18 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route element={<GuestLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/shops" element={<Shop />} />
+          <Route
+            path="/carts"
+            element={
+              <GuestProtectedRoute>
+                <ShoppingCart />
+              </GuestProtectedRoute>
+            }
+          />
+        </Route>
 
         {/* Guest-only */}
         <Route
@@ -47,14 +61,6 @@ function App() {
             <GuestOnlyRoutes>
               <SignUp />
             </GuestOnlyRoutes>
-          }
-        />
-        <Route
-          path="/carts"
-          element={
-            <GuestProtectedRoute>
-              <ShoppingCart />
-            </GuestProtectedRoute>
           }
         />
 
@@ -82,6 +88,7 @@ function App() {
           <Route path="products" element={<Product />} />
           <Route path="categories" element={<Category />} />
           <Route path="orders" element={<Orders />} />
+          <Route path="payments" element={<Payment />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

@@ -29,6 +29,7 @@ const ShoppingCart = () => {
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [debounceQuantity, setDebounceQuantity] = useState();
+  const [loading, setLoading] = useState(false);
   const [clientSecret, setClientSecret] = useState("");
 
   // const updateQuantity = (id, newQuantity) => {
@@ -104,23 +105,27 @@ const ShoppingCart = () => {
 
   const total = subtotal + shipping + tax - discount;
 
-  const handleOpenModal = () => {
-    api
-      .post("api/create-payment-intent", { amount: total })
-      .then((res) => {
-        setClientSecret(res.data.clientSecret);
-        setIsOpen(true);
-      })
-      .catch((error) => {
-        console.error("Failed to create payment intent:", error);
-      });
+  const handleOpenModal = async () => {
+    setLoading(true);
+    try {
+      await api
+        .post("api/create-payment-intent", { amount: total })
+        .then((res) => {
+          setClientSecret(res.data.clientSecret);
+          setIsOpen(true);
+        })
+        .catch((error) => {
+          console.error("Failed to create payment intent:", error);
+        });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <Navbar />
-
+    <>
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-40">
         <div className="flex flex-col lg:flex-row gap-8">
@@ -267,9 +272,15 @@ const ShoppingCart = () => {
                   {/* Checkout Button */}
                   <button
                     onClick={handleOpenModal}
-                    className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors mb-3"
+                    disabled={loading || total < 1}
+                    className={`w-full py-3 rounded-lg font-semibold transition-colors mb-3
+                    ${
+                      loading || total < 1
+                        ? "bg-purple-400 cursor-not-allowed text-gray-200"
+                        : "bg-purple-600 hover:bg-purple-700 text-white"
+                    }`}
                   >
-                    Proceed to Checkout
+                    {loading ? "Processing..." : "Proceed to Checkout"}
                   </button>
 
                   <button className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors">
@@ -289,7 +300,7 @@ const ShoppingCart = () => {
           </Elements>
         </Modal>
       )}
-    </div>
+    </>
   );
 };
 

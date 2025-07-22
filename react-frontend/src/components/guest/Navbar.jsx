@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router";
+import { useState } from "react";
+import { Link, NavLink } from "react-router";
 import {
   Heart,
   ShoppingBag,
@@ -26,7 +26,7 @@ const Navbar = () => {
     },
     {
       name: "Shop",
-      link: "#",
+      link: "/shops",
       icon: <ShoppingBag size={20} />,
     },
     // {
@@ -71,13 +71,19 @@ const Navbar = () => {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navigationItems.map((item, index) => (
-                <Link
+                <NavLink
                   key={index}
                   to={item.link}
-                  className="text-black hover:text-gray-200 px-3 py-2 text-[18px] font-semibold transition-colors duration-200 hover:bg-gray-800 rounded-md inline-flex gap-1 items-center"
+                  className={({ isActive }) =>
+                    `px-3 py-2 text-[18px] font-semibold transition-colors duration-200 rounded-md inline-flex gap-1 items-center ${
+                      isActive
+                        ? "text-gray-200 bg-gray-800"
+                        : "text-black hover:text-gray-200 hover:bg-gray-800"
+                    }`
+                  }
                 >
                   {item.name}
-                </Link>
+                </NavLink>
               ))}
             </div>
           </div>

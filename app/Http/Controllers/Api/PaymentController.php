@@ -19,9 +19,45 @@ class PaymentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $search     = $request->input('search');
+        $dateFrom   = $request->input('date_from');
+        $dateTo     = $request->input('date_to');
+        $sortBy     = $request->input('sort_by', 'created_at');
+        $sortDir    = $request->input('sort_dir', 'desc');
+        $perPage    = $request->input('per_page', 10);
+
+        // Optional: whitelist sortable columns to prevent SQL injection
+        $sortableColumns = [
+            'id' => 'payments.id',
+            'status' => 'payments.status',
+            'amount' => 'payments.amount',
+            'payment_method' => 'paymenrs.payment_method',
+            'payment_date' => 'payments.payment_date',
+            'order' => 'users.name',
+        ];
+
+        $sortBy = $sortableColumns[$request->input('sort_by')] ?? 'payments.payment_date';
+
+        $payments = Payment::select('payments.*')
+            ->join('orders', 'orders.id', '=', 'payments.order_id')
+            ->join('users', 'users.id', '=', 'orders.user_id')
+            ->with(['order.user'])
+            ->when($search, function ($query, $search) {
+                $query->where('users.name', 'LIKE', "%{$search}%");
+            })
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->where('payments.payment_date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->where('payments.payment_date', '<=', $dateTo);
+            })
+            ->orderBy($sortBy, $sortDir)
+            ->paginate($perPage);
+
+
+        return $payments;
     }
 
     /**

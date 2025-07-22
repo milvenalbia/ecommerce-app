@@ -29,7 +29,7 @@ class StripePaymentController
         $paymentIntent = PaymentIntent::create([
             'amount' => $amount * 100, // $10.00 = 1000
             'currency' => 'usd',
-            'automatic_payment_methods' => ['enabled' => true],
+            'payment_method_types' => ['card'],
         ]);
 
         // 'payment_method_types' => ['card'], (if you want to use card only)

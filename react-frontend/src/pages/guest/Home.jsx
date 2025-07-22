@@ -4,9 +4,7 @@ import ProductList from "../../components/guest/ProductList";
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <Navbar />
+    <>
       <Hero />
 
       {/* Main Content */}
@@ -15,7 +13,7 @@ const Home = () => {
           <ProductList />
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

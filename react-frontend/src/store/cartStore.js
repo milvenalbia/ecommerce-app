@@ -67,7 +67,6 @@ export const useCartStore = create(
           const data = res.data;
 
           if (data) {
-            localStorage.setItem("totalItems", data.totalItems);
             set({ totalItems: data.totalItems });
             toast.success(data.message || "Added successfully.");
           }
@@ -139,11 +138,11 @@ export const useCartStore = create(
           const data = res.data;
 
           if (data) {
-            set((state) => ({
-              items: state.items.map((item) =>
-                item.id === cart_id ? data.cart : item
-              ),
-            }));
+            // set((state) => ({
+            //   items: state.items.map((item) =>
+            //     item.id === cart_id ? data.cart : item
+            //   ),
+            // }));
             set({ totalItems: data.totalItems });
             toast.success(data.message || "Updated successfully");
           }
