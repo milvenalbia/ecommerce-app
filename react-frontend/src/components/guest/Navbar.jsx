@@ -62,7 +62,7 @@ const Navbar = () => {
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-purple-500 rounded flex items-center justify-center">
                   <ShoppingBag className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-lg font-semibold">Shopping</span>
+                <span className="text-lg font-semibold">ShopZone</span>
               </div>
             </div>
           </Link>

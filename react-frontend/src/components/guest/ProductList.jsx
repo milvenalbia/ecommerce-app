@@ -153,8 +153,9 @@ const ProductList = () => {
         ) : products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {products.map((product) => (
-              <div
+              <Link
                 key={product.id}
+                to={`/product/${product.id}`}
                 className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
               >
                 <div className="relative">
@@ -196,7 +197,7 @@ const ProductList = () => {
                     Add to cart
                   </button>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

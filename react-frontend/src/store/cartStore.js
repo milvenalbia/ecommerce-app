@@ -60,9 +60,11 @@ export const useCartStore = create(
         }
       },
 
-      addToCart: async (product_id) => {
+      addToCart: async (product_id, quantity) => {
         try {
-          const res = await api.post(`api/products/carts/${product_id}`);
+          const res = await api.post(`api/products/carts/${product_id}`, {
+            quantity: quantity,
+          });
 
           const data = res.data;
 

@@ -53,7 +53,7 @@ const Sidebar = () => {
               <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-500 rounded flex items-center justify-center">
                 <ShoppingBag className="w-8 h-8 text-white" />
               </div>
-              <span className="text-xl font-semibold">Shopping</span>
+              <span className="text-xl font-semibold">ShopZone</span>
             </div>
           </div>
         </NavLink>

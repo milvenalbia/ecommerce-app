@@ -101,6 +101,8 @@ class ProductController extends Controller implements HasMiddleware
      */
     public function show(Product $product)
     {
+        $product->load('category');
+
         return ['product' => $product];
     }
 
@@ -166,6 +168,7 @@ class ProductController extends Controller implements HasMiddleware
     public function addToCart(Request $request, Product $product)
     {
         $user_id = $request->user()->id;
+        $quantity = $request->input('quantity') ?? 1;
 
         if (!$product) {
             throw new NotFoundHttpException();
@@ -178,13 +181,13 @@ class ProductController extends Controller implements HasMiddleware
 
         if ($cart) {
             $cart->update([
-                'quantity' => $cart->quantity + 1,
+                'quantity' => $cart->quantity + $quantity,
             ]);
         } else {
             Cart::create([
                 'user_id' => $user_id,
                 'product_id' => $product->id,
-                'quantity' => 1,
+                'quantity' => $quantity,
                 'price' => $product->price
             ]);
         }

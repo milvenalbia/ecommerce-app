@@ -53,7 +53,7 @@ class StripePaymentController
                 $endpointSecret
             );
         } catch (\Exception $e) {
-            return response('Invalid signature', 400);
+            return response(`Invalid signature: $e`, 400);
         }
 
         if ($event->type === 'payment_intent.succeeded') {

@@ -16,8 +16,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Auth routes with custom rate limits
 Route::get('/categories/filters', [CategoryController::class, 'categories']);
+Route::get('/product-by-categories', [CategoryController::class, 'get_products_suggestions']);
 
 Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:register', 'web']);
 Route::post('/login', [AuthController::class, 'login'])->middleware(['throttle:login', 'web']);

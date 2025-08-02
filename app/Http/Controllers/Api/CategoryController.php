@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -117,5 +118,25 @@ class CategoryController extends Controller
         $category->delete();
 
         return $message;
+    }
+
+    public function get_products_suggestions(Request $request)
+    {
+        $category   = $request->input('category');
+        $product_id = $request->input('product_id');
+
+        $products = Product::with('category')
+            ->where('id', '!=', $product_id)
+            ->when($category, function ($query, $category) {
+                if (is_array($category)) {
+                    $query->whereIn('category_id', $category);
+                } else {
+                    $query->where('category_id', $category);
+                }
+            })
+            ->limit(8)
+            ->get();
+
+        return $products;
     }
 }

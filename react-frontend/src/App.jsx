@@ -20,6 +20,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import Shop from "./pages/guest/Shop";
 import GuestLayout from "./layouts/GuestLayout";
 import Payment from "./pages/admin/Payment";
+import SingleProduct from "./pages/guest/SingleProduct";
 
 function App() {
   const { user, fetchUser, isLoading } = useAuthStore();
@@ -44,6 +45,7 @@ function App() {
               </GuestProtectedRoute>
             }
           />
+          <Route path="/product/:id" element={<SingleProduct />} />
         </Route>
 
         {/* Guest-only */}
