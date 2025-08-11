@@ -19,6 +19,7 @@ class Product extends Model
         'stock_quantity',
         'category_id',
         'image_url',
+        'image_public_id',
         'is_active',
     ];
 

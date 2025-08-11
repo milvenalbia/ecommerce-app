@@ -22,7 +22,10 @@ const ShoppingCart = () => {
   } = useCartStore();
 
   useEffect(() => {
-    fetchCartItems();
+    const controller = new AbortController();
+    fetchCartItems(controller);
+
+    return () => controller.abort();
   }, []);
 
   const [isOpen, setIsOpen] = useState(false);

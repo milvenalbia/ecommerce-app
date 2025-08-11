@@ -25,11 +25,11 @@ export const useCartStore = create(
       setItems: (newItems) => set({ items: newItems }),
       setTotalItems: (newTotal) => set({ totalItems: newTotal }),
 
-      fetchCartItems: async () => {
+      fetchCartItems: async (controller) => {
         set({ isLoading: true });
 
         try {
-          const res = await api.get("api/carts");
+          const res = await api.get("api/carts", { signal: controller.signal });
           const data = res.data;
 
           set({
@@ -38,6 +38,10 @@ export const useCartStore = create(
             isLoading: false,
           });
         } catch (err) {
+          if (err.name === "CanceledError") {
+            console.log("Fetching cart cancelled!");
+            return;
+          }
           if (err.response) {
             const { status } = err.response;
 
@@ -55,9 +59,9 @@ export const useCartStore = create(
             totalItems: 0,
             isLoading: false,
           });
-        } finally {
-          set({ isLoading: false });
         }
+
+        set({ isLoading: false });
       },
 
       addToCart: async (product_id, quantity) => {

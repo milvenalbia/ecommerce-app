@@ -17,6 +17,7 @@ const Product = () => {
   const [categories, setCategories] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
   const [productId, setProductId] = useState(0);
+  const [preview, setPreview] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -24,7 +25,8 @@ const Product = () => {
     price: 0,
     stock_quantity: 1,
     category_id: 0,
-    image_url: "",
+    image_url: null,
+    image_file: null,
   });
 
   const fetchCategory = async () => {
@@ -59,6 +61,7 @@ const Product = () => {
       stock_quantity: row.stock_quantity,
       category_id: row.category_id,
       image_url: row.image_url,
+      image_file: row.image_url,
     });
 
     setIsOpen(true);
@@ -119,10 +122,29 @@ const Product = () => {
     e.preventDefault();
 
     setIsSubmitting(true);
+
+    const fd = new FormData();
+
+    console.log("Form Data Orig: ", formData);
+    // Append all form fields
+    fd.append("name", formData.name);
+    fd.append("description", formData.description || "");
+    fd.append("price", formData.price);
+    fd.append("stock_quantity", formData.stock_quantity);
+    fd.append("category_id", formData.category_id);
+    fd.append("image_url", formData.image_url);
+
+    if (isEdit) {
+      fd.append("_method", "PUT");
+    }
     try {
       const res = await (isEdit
-        ? api.put(`/api/products/${productId}`, formData)
-        : api.post("/api/products", formData));
+        ? api.post(`/api/products/${productId}`, fd, {
+            headers: { "Content-Type": "multipart/form-data" },
+          })
+        : api.post("/api/products", fd, {
+            headers: { "Content-Type": "multipart/form-data" },
+          }));
 
       const data = res.data;
 
@@ -138,10 +160,12 @@ const Product = () => {
           stock_quantity: 1,
           category_id: 0,
           image_url: "",
+          image_file: null,
         });
         if (isEdit) {
           setProductId(0);
         }
+        setPreview(null);
       }
     } catch (error) {
       setIsSubmitting(false);
@@ -166,28 +190,57 @@ const Product = () => {
   };
 
   const closeModal = () => {
-    setIsOpen(false);
-    if (isEdit) {
-      setProductId(0);
-      setIsEdit(false);
-    }
+    if (!isSubmitting) {
+      setIsOpen(false);
+      if (isEdit) {
+        setProductId(0);
+        setIsEdit(false);
+      }
 
-    dispatch(setError({}));
-    setFormData({
-      name: "",
-      description: "",
-      price: 0,
-      stock_quantity: 1,
-      category_id: 0,
-      image_url: "",
-    });
+      dispatch(setError({}));
+      setFormData({
+        name: "",
+        description: "",
+        price: 0,
+        stock_quantity: 1,
+        category_id: 0,
+        image_url: null,
+        image_file: null,
+      });
+
+      setPreview(null);
+    }
   };
 
-  const handleChange = (name, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  // const handleChange = (name, value) => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: value,
+  //   }));
+  // };
+
+  const handleChange = (name, value, files) => {
+    if (name === "image_url" && files && files[0]) {
+      const file = files[0];
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: file,
+      }));
+
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Handle other inputs
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const inputChange = (e) => {
@@ -356,44 +409,81 @@ const Product = () => {
               />
               {error.name && <span className="error">{error.name[0]}</span>}
               <div className="flex items-center gap-2">
-                <GroupField
-                  label={"Price"}
-                  labelFor={"price"}
-                  type="number"
-                  min={1}
-                  max={999999999}
-                  className={"w-full"}
-                  name={"price"}
-                  value={formData.price}
-                  onChange={handleChange}
-                />
-                {error.price && <span className="error">{error.price[0]}</span>}
-                <GroupField
-                  label={"Quantity"}
-                  labelFor={"quantity"}
-                  type="number"
-                  min={1}
-                  max={999999999}
-                  name={"stock_quantity"}
-                  value={formData.stock_quantity}
-                  onChange={handleChange}
-                  className={"w-full"}
-                />
-                {error.stock_quantity && (
-                  <span className="error">{error.stock_quantity[0]}</span>
-                )}
+                <div className="flex-1 ">
+                  <GroupField
+                    label={"Price"}
+                    labelFor={"price"}
+                    type="number"
+                    min={1}
+                    max={999999999}
+                    className={"w-full"}
+                    name={"price"}
+                    value={formData.price}
+                    onChange={handleChange}
+                  />
+                  {error.price && <p className="error">{error.price[0]}</p>}
+                </div>
+                <div className="flex-1">
+                  <GroupField
+                    label={"Quantity"}
+                    labelFor={"quantity"}
+                    type="number"
+                    min={1}
+                    max={999999999}
+                    name={"stock_quantity"}
+                    value={formData.stock_quantity}
+                    onChange={handleChange}
+                    className={"w-full"}
+                  />
+                  {error.stock_quantity && (
+                    <p className="error">{error.stock_quantity[0]}</p>
+                  )}
+                </div>
               </div>
               <GroupField
                 label={"Image Url"}
-                labelFor={"image"}
+                labelFor={"image_url"}
                 name={"image_url"}
                 placeholder={"Enter product image url/address"}
-                value={formData.image_url}
+                type="file"
                 onChange={handleChange}
               />
               {error.image_url && (
                 <span className="error">{error.image_url[0]}</span>
               )}
+
+              <div className="w-full mt-3 overflow-hidden">
+                {isEdit ? (
+                  <div className="flex justify-center items-center gap-5">
+                    {preview && (
+                      <div className="flex-1">
+                        <p className="text-sm">New Image:</p>
+                        <img
+                          src={preview}
+                          alt="old image"
+                          className="w-40 h-40 object-center object-cover rounded-md"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="text-sm">Previous Image:</p>
+                      <img
+                        src={formData.image_file}
+                        alt="old image"
+                        className="w-40 h-40 object-center object-cover rounded-md"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  preview && (
+                    <img
+                      src={preview}
+                      alt="Image Preview"
+                      className="w-40 h-40 object-center object-cover rounded-md"
+                    />
+                  )
+                )}
+              </div>
               <div className="flex flex-col gap-2 mt-4 w-full">
                 <label htmlFor="category">Product Category</label>
                 <Select

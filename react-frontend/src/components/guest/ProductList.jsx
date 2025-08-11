@@ -1,5 +1,5 @@
-import { Filter, RefreshCw, Star } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Filter, RefreshCw, ShoppingCart, Star } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
 import { toast } from "sonner";
 import FilterBar from "./Filter";
@@ -10,7 +10,7 @@ import Modal from "./Modal";
 import SmallLoading from "../SmallLoading";
 
 const ProductList = () => {
-  const { addToCart, fetchCartItems } = useCartStore();
+  const { addToCart } = useCartStore();
   const { user } = useAuthStore();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -25,32 +25,30 @@ const ProductList = () => {
     price_from: null,
     price_to: null,
   });
-  const fetchProduct = async () => {
+
+  const fetchProduct = async (controller) => {
     setLoading(true);
     try {
       const res = await api.get("api/products", {
         params: { ...params, per_page: perPage, search: debouncedSearchTerm },
+        signal: controller.signal,
       });
 
-      const data = res.data;
-
-      if (data) {
-        setProducts(data.data);
-        setTotalProduct(data.total);
-      }
+      setProducts(res.data.data);
+      setTotalProduct(res.data.total);
     } catch (error) {
-      if (error.response) {
-        const { status } = error.response;
-
-        if (status === 429) {
-          toast.error("Too many request. Try again later");
-        }
+      if (error.name === "CanceledError") {
+        console.log("Fetching product data cancelled!");
+        return;
+      }
+      if (error.response?.status === 429) {
+        toast.error("Too many requests. Try again later");
       } else {
         toast.error("Network error or server not responding.");
       }
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   const closeModal = () => {
@@ -92,10 +90,6 @@ const ProductList = () => {
   };
 
   useEffect(() => {
-    fetchCartItems();
-  }, []);
-
-  useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
     }, 500);
@@ -106,8 +100,11 @@ const ProductList = () => {
   }, [searchTerm]);
 
   useEffect(() => {
-    fetchProduct();
-  }, [JSON.stringify(params), debouncedSearchTerm]);
+    const controller = new AbortController();
+    fetchProduct(controller);
+
+    return () => controller.abort();
+  }, [params, debouncedSearchTerm]);
   return (
     <>
       <div className="lg:hidden">
@@ -153,51 +150,56 @@ const ProductList = () => {
         ) : products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {products.map((product) => (
-              <Link
-                key={product.id}
-                to={`/product/${product.id}`}
-                className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-              >
-                <div className="relative">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-48 sm:h-64 object-cover"
-                  />
-                  {/* {product.sale && (
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                <Link
+                  key={product.id}
+                  to={`/product/${product.id}`}
+                  className="group"
+                >
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-48 sm:h-64 object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    {/* {product.sale && (
                   <span className="absolute top-3 left-3 bg-purple-500 text-white text-xs px-2 py-1 rounded">
                     SALE
                   </span>
                 )} */}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-medium text-gray-900 mb-2">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-lg font-bold text-purple-600">
-                      ${Number(product.price).toLocaleString()}
-                    </span>
-                    {/* <span className="text-sm text-gray-500 line-through">
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-medium text-gray-900 mb-2">
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-lg font-bold text-purple-600">
+                        ${Number(product.price).toLocaleString()}
+                      </span>
+                      {/* <span className="text-sm text-gray-500 line-through">
                     ${product.originalPrice}
                   </span> */}
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                      />
-                    ))}
-                  </div>
+                </Link>
+                <div className="px-4 pb-4">
                   <button
-                    onClick={() => handleAddToCart(product.id)}
-                    className="w-full p-2 px-3 mt-2 rounded cursor-pointer text-center text-white bg-purple-400 hover:bg-purple-500"
+                    onClick={(e) => handleAddToCart(product.id)}
+                    className="w-full p-2 px-3 mt-2 rounded cursor-pointer text-center transition text-white bg-purple-400 hover:bg-purple-500 hover:scale-105 duration-300"
                   >
                     Add to cart
                   </button>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         ) : (

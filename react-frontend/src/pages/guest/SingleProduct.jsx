@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import Loading from "../../components/Loading";
 import api from "../../api/axios";
@@ -6,6 +6,7 @@ import { useCartStore } from "../../store/cartStore";
 import { useAuthStore } from "../../store/authStore";
 import ProductDisplay from "../../components/guest/single_product/ProductDisplay";
 import ProductSuggestion from "../../components/guest/single_product/ProductSuggestion";
+import Modal from "../../components/guest/Modal";
 
 const SingleProduct = () => {
   const { id } = useParams();
@@ -16,24 +17,28 @@ const SingleProduct = () => {
 
   const { addToCart } = useCartStore();
   const { user } = useAuthStore();
-  const getProduct = async () => {
+
+  const getProduct = async (controller) => {
     setLoading(true);
+
     try {
-      const response = await api.get(`api/products/${id}`);
+      const res = await api.get(`api/products/${id}`, {
+        signal: controller.signal,
+      });
 
       window.scrollTo({ top: 0, behavior: "smooth" });
-
-      const data = response.data;
-
-      console.log(data);
-      if (data) {
-        setProduct(data.product);
-      }
+      setProduct(res.data?.product || {});
     } catch (error) {
-      setProduct({});
-    } finally {
-      setLoading(false);
+      if (error.name === "CanceledError") {
+        console.log("Fetching product cancelled!");
+        return;
+      } else {
+        console.error(error);
+        setProduct();
+      }
     }
+
+    setLoading(false);
   };
 
   const closeModal = () => {
@@ -50,7 +55,10 @@ const SingleProduct = () => {
   };
 
   useEffect(() => {
-    getProduct();
+    const controller = new AbortController();
+    getProduct(controller);
+
+    return () => controller.abort();
   }, [id]);
   return (
     <>

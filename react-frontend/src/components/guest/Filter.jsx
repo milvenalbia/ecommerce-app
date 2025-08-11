@@ -1,5 +1,5 @@
 import { ChevronDown, Filter, RefreshCw } from "lucide-react";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import api from "../../api/axios";
 import { toast } from "sonner";
 import SmallLoading from "../SmallLoading";
@@ -13,10 +13,13 @@ const FilterBar = ({
   const [categories, setCategories] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 0]);
   const [loading, setLoading] = useState(false);
-  const fetctCategory = async () => {
+
+  const fetctCategory = async (controller) => {
     setLoading(true);
     try {
-      const res = await api.get("api/categories/filters");
+      const res = await api.get("api/categories/filters", {
+        signal: controller.signal,
+      });
 
       const data = res.data;
 
@@ -24,10 +27,15 @@ const FilterBar = ({
         setCategories(data);
       }
     } catch (error) {
-      toast.error("Cannot fetch category.");
-    } finally {
-      setLoading(false);
+      if (error.name === "CanceledError") {
+        console.log("Fetching filter data cancelled!");
+        return;
+      } else {
+        toast.error("Cannot fetch category.");
+      }
     }
+
+    setLoading(false);
   };
 
   const handleInputChange = (type, value) => {
@@ -63,7 +71,10 @@ const FilterBar = ({
   };
 
   useEffect(() => {
-    fetctCategory();
+    const controller = new AbortController();
+    fetctCategory(controller);
+
+    return () => controller.abort();
   }, []);
   return (
     <div

@@ -12,8 +12,8 @@ const GroupField = ({
   ...props
 }) => {
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    onChange(name, value);
+    const { name, value, files } = e.target;
+    onChange(name, value, files);
   };
   return (
     <div className="flex flex-col gap-2 mt-4 w-full">

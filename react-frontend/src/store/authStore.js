@@ -66,6 +66,7 @@ export const useAuthStore = create(
         setTotalItems(0);
         localStorage.removeItem("auth-storage");
         localStorage.removeItem("totalItems");
+        toast.success("You have been logged out!");
       },
     }),
     {

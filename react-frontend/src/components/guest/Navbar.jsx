@@ -74,15 +74,18 @@ const Navbar = () => {
                 <NavLink
                   key={index}
                   to={item.link}
-                  className={({ isActive }) =>
-                    `px-3 py-2 text-[18px] font-semibold transition-colors duration-200 rounded-md inline-flex gap-1 items-center ${
-                      isActive
-                        ? "text-gray-200 bg-gray-800"
-                        : "text-black hover:text-gray-200 hover:bg-gray-800"
-                    }`
-                  }
+                  className={`px-3 py-2 text-lg font-semibold transition duration-200 rounded-md items-center gap-3 `}
                 >
-                  {item.name}
+                  {({ isActive }) => (
+                    <div className="relative flex flex-col group">
+                      <span>{item.name}</span>
+                      <span
+                        className={`absolute left-0 -bottom-1 h-1 bg-black transition-all duration-300 ${
+                          isActive ? "w-full" : "w-0 group-hover:w-full"
+                        }`}
+                      ></span>
+                    </div>
+                  )}
                 </NavLink>
               ))}
             </div>

@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import api from "../../../api/axios";
 import { Link } from "react-router";
 
 const ProductSuggestion = ({ category_id, product_id }) => {
   const [products, setProducts] = useState([]);
 
-  const get_products = async () => {
+  const get_products = async (controller) => {
     try {
       const response = await api.get("api/product-by-categories", {
         params: { category: category_id, product_id: product_id },
+        signal: controller.signal,
       });
 
       const data = response.data;
@@ -17,12 +18,20 @@ const ProductSuggestion = ({ category_id, product_id }) => {
         setProducts(data);
       }
     } catch (error) {
-      console.log(error);
+      if (error.name === "CanceledError") {
+        console.log("Fetching product catergory cancelled!");
+        return;
+      } else {
+        console.log(error);
+      }
     }
   };
 
   useEffect(() => {
-    get_products();
+    const controller = new AbortController();
+    get_products(controller);
+
+    return () => controller.abort();
   }, [product_id]);
 
   return (

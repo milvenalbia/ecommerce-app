@@ -10,7 +10,7 @@ const FormModal = ({ children, closeModal, isEdit, title }) => {
       ></div>
 
       {/* Modal Content */}
-      <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-lg mx-4 duration-300 border border-white/20">
+      <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-xl mx-4 duration-300 border border-white/20">
         <div className="relative bg-white rounded-3xl p-8 max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">

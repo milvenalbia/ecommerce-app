@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Cart;
 use App\Models\Product;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProductController extends Controller implements HasMiddleware
@@ -19,7 +21,7 @@ class ProductController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('auth:sanctum', except: ['index'])
+            new Middleware('auth:sanctum', except: ['index', 'show'])
         ];
     }
 
@@ -75,26 +77,36 @@ class ProductController extends Controller implements HasMiddleware
     }
 
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $fields = $request->validate([
-            "name" => 'required|max:255|',
+            "name" => 'required|max:255',
             "description" => 'nullable',
             "price" => 'required|numeric|min:1|max:9999999.99',
             "stock_quantity" => 'required|numeric|min:1|max:9999999.99',
             "category_id" => 'required|exists:categories,id',
-            "image_url" => 'nullable',
+            "image_url" => 'required|image|max:4096',
         ]);
 
-        Product::create($fields);
+        // Upload to Cloudinary
+        $path = Storage::disk('cloudinary')
+            ->putFile('ecom_products', $request->file('image_url'));
 
-        return [
-            'message' => 'Product created successfully.'
-        ];
+        $image_url = Storage::disk('cloudinary')->url($path);
+
+        $product = Product::create(array_merge($fields, [
+            "image_url" => $image_url,
+            "image_public_id" => $path
+        ]));
+
+        return response()->json([
+            'message' => 'Product created successfully.',
+            'product' => $product,
+        ]);
     }
+
+
+
 
     /**
      * Display the specified resource.
@@ -106,19 +118,41 @@ class ProductController extends Controller implements HasMiddleware
         return ['product' => $product];
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+
     public function update(Request $request, Product $product)
     {
-        $fields = $request->validate([
-            "name" => 'required|max:255|',
+        // Use conditional validation rules to avoid duplication
+        $rules = [
+            "name" => 'required|max:255',
             "description" => 'nullable',
             "price" => 'required|numeric|min:1|max:9999999.99',
             "stock_quantity" => 'required|numeric|min:1|max:9999999.99',
             "category_id" => 'required|exists:categories,id',
-            "image_url" => 'nullable',
-        ]);
+        ];
+
+        // If image is uploaded, validate it as image; else, image_url required only if no existing image
+        if ($request->hasFile('image_url')) {
+            $rules["image_url"] = 'image|max:4096';
+        } else {
+            $rules["image_url"] = $product->image_url ? 'nullable' : 'required';
+        }
+
+        $fields = $request->validate($rules);
+
+        // Process image if uploaded
+        if ($request->hasFile('image_url')) {
+            // Delete old image only if public id exists
+            if ($product->image_public_id) {
+                Storage::disk('cloudinary')->delete($product->image_public_id);
+            }
+
+            // Upload new image
+            $path = Storage::disk('cloudinary')->putFile('ecom_products', $request->file('image_url'));
+            $image_url = Storage::disk('cloudinary')->url($path);
+
+            $fields['image_url'] = $image_url;
+            $fields['image_public_id'] = $path;
+        }
 
         $product->update($fields);
 
@@ -126,6 +160,8 @@ class ProductController extends Controller implements HasMiddleware
             'message' => 'Product updated successfully.'
         ];
     }
+
+
 
     /**
      * Remove the specified resource from storage.
@@ -139,6 +175,10 @@ class ProductController extends Controller implements HasMiddleware
         }
 
         $message = $product->name . ' deleted successfully.';
+
+        if ($product->image_public_id) {
+            Storage::disk('cloudinary')->delete($product->image_public_id);
+        }
 
         $product->delete();
 
