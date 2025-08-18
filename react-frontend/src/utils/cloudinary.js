@@ -21,6 +21,18 @@ const boySkate = "b-skate_e9qhhj";
 const heroBg =
   "https://res.cloudinary.com/dwewghaw7/image/upload/v1754897843/hero-bg-2_ra1w36.webp";
 
+export const getCloudImage = (public_id) => {
+  if (!public_id) {
+    console.log("No Image Public Id Found");
+    return;
+  }
+
+  return cld
+    .image(public_id)
+    .format("auto")
+    .quality("auto")
+    .resize(scale().width(300));
+};
 export const heroBgImg = cld
   .image(heroBg)
   .format("auto")

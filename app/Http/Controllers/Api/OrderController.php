@@ -71,7 +71,9 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        //
+        $order->load(['orderItems', 'orderItems.product', 'user', 'user.shippingAddresses']);
+
+        return $order;
     }
 
     /**

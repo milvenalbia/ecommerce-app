@@ -20,7 +20,7 @@ class UserController extends Controller
             return 'No users found.';
         }
 
-        return $users;
+        return $users->load('shippingAddresses');
     }
 
     /**

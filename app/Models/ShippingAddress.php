@@ -10,7 +10,7 @@ class ShippingAddress extends Model
 {
     /** @use HasFactory<\Database\Factories\ShippingAddressFactory> */
     use HasFactory;
-    
+
     protected $fillable = [
         'user_id',
         'address',
@@ -21,6 +21,6 @@ class ShippingAddress extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(user::class);
+        return $this->belongsTo(User::class);
     }
 }

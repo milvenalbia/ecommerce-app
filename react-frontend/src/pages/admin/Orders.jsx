@@ -1,11 +1,24 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
+import {
+  Package,
+  Truck,
+  MapPin,
+  CreditCard,
+  Calendar,
+  CheckCircle,
+} from "lucide-react";
 import DataTable from "../../components/admin/DataTable";
 import api from "../../api/axios";
 import { toast } from "sonner";
+import Modal from "../../components/guest/Modal";
+import SmallLoading from "../../components/SmallLoading";
 
 const Orders = () => {
   const dataTableRef = useRef();
 
+  const [orderData, setOrderData] = useState(null);
+  const [view, setView] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [loadingRowId, setLoadingRowId] = useState(null);
   const handleStatus = async (e, rowId) => {
     const status = e.target.value;
@@ -37,12 +50,48 @@ const Orders = () => {
     }
   };
 
-  const handleView = (row) => {
-    console.log("handle view clicked", row.id);
+  const closeModal = () => {
+    setView(false);
+    setOrderData(null);
   };
 
+  const handleView = async (row) => {
+    setView(true);
+    setIsLoading(true);
+
+    try {
+      const res = await api.get(`/api/orders/${row.id}`);
+
+      const data = res.data;
+
+      console.log(data);
+      if (data) {
+        setOrderData(data);
+      }
+    } catch (error) {
+      console.log("Error: ", error);
+    }
+
+    setIsLoading(false);
+  };
+
+  const subtotal = orderData?.total_amount / 1.08;
+  const shipping = orderData?.total_amount > 100 ? 0 : 9.99;
+  const tax = subtotal * 0.08;
+
+  const total = subtotal + shipping + tax;
+
   const columns = [
-    { key: "id", title: "ID", sortable: true, width: "w-[10%]" },
+    { key: "id", hidden: true },
+    {
+      key: "index",
+      title: "No.",
+      sortable: false,
+      width: "w-[10%]",
+      render: (value, row, index) => {
+        return <span className="ml-5">{index + 1}</span>;
+      },
+    },
     {
       key: "user",
       title: "Name",
@@ -143,6 +192,147 @@ const Orders = () => {
           ref={dataTableRef}
         />
       </div>
+
+      {view && (
+        <Modal
+          title={"Order Details"}
+          closeModal={closeModal}
+          classname={"max-w-4xl overflow-y-auto"}
+        >
+          {isLoading ? (
+            <SmallLoading />
+          ) : (
+            <div className="max-w-4xl mx-auto p-5 bg-gray-50">
+              {/* Order Status Timeline */}
+              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-5 h-5 text-gray-400" />
+                    <span className="text-sm text-gray-600">
+                      Ordered: {new Date(orderData.created_at).toDateString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Truck className="w-5 h-5 text-blue-500" />
+                    <span className="text-sm text-gray-600">
+                      Est. Delivery: August 20, 2025
+                    </span>
+                  </div>
+                </div>
+                {orderData.trackingNumber && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-md">
+                    <p className="text-sm text-blue-800">
+                      <Package className="w-4 h-4 inline mr-1" />
+                      Tracking Number:
+                      <span className="font-mono">1Z999AA1234567890</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Order Items */}
+                <div className="lg:col-span-2">
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                      Order Items
+                    </h2>
+                    <div className="space-y-4">
+                      {orderData.order_items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center space-x-4 p-4 border border-gray-100 rounded-lg"
+                        >
+                          <img
+                            src={item.product.image_url}
+                            alt={item.product.name}
+                            className="w-16 h-16 object-cover rounded-md"
+                          />
+                          <div className="flex-1">
+                            <h3 className="font-medium text-gray-900">
+                              {item.product.name}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              Qty: {item.quantity}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium text-gray-900">
+                              ${item.price_at_purchase}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Summary Sidebar */}
+                <div className="space-y-6">
+                  {/* Pricing Summary */}
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                      Order Summary
+                    </h2>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Subtotal</span>
+                        <span className="text-gray-900">
+                          ${subtotal.toLocaleString(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Shipping</span>
+                        <span className="text-gray-900">
+                          {shipping > 0
+                            ? `$${shipping.toLocaleString(2)}`
+                            : "free"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Tax</span>
+                        <span className="text-gray-900">
+                          ${tax.toLocaleString(2)}
+                        </span>
+                      </div>
+                      <div className="border-t pt-3">
+                        <div className="flex justify-between">
+                          <span className="text-base font-semibold text-gray-900">
+                            Total
+                          </span>
+                          <span className="text-base font-semibold text-gray-900">
+                            ${total.toLocaleString(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Shipping Address */}
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <MapPin className="w-5 h-5 mr-2 text-gray-400" />
+                      Shipping Address
+                    </h2>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p className="font-medium text-gray-900">
+                        {orderData.user.name}
+                      </p>
+                      <p>
+                        {orderData.user.shipping_addresses.address ?? "n/a"}
+                      </p>
+                      <p>
+                        {orderData.user.shipping_addresses.city ?? "n/a"},{" "}
+                        {orderData.user.shipping_addresses.postal_code ?? "n/a"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </Modal>
+      )}
     </div>
   );
 };

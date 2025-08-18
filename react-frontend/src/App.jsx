@@ -21,6 +21,7 @@ import Shop from "./pages/guest/Shop";
 import GuestLayout from "./layouts/GuestLayout";
 import Payment from "./pages/admin/Payment";
 import SingleProduct from "./pages/guest/SingleProduct";
+import Reports from "./pages/admin/Reports";
 
 function App() {
   const { user, fetchUser, isLoading } = useAuthStore();
@@ -91,6 +92,7 @@ function App() {
           <Route path="categories" element={<Category />} />
           <Route path="orders" element={<Orders />} />
           <Route path="payments" element={<Payment />} />
+          <Route path="reports" element={<Reports />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

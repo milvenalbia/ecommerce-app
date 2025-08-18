@@ -7,6 +7,7 @@ import api from "../../api/axios";
 import { setError } from "../../redux/slices/error";
 import { toast } from "sonner";
 import FormModal from "../../components/admin/FormModal";
+import { AdvancedImage } from "@cloudinary/react";
 
 const Product = () => {
   const dispatch = useDispatch();
@@ -27,6 +28,7 @@ const Product = () => {
     category_id: 0,
     image_url: null,
     image_file: null,
+    image_public_id: null,
   });
 
   const fetchCategory = async () => {
@@ -62,6 +64,7 @@ const Product = () => {
       category_id: row.category_id,
       image_url: row.image_url,
       image_file: row.image_url,
+      image_public_id: row.image_public_id,
     });
 
     setIsOpen(true);
@@ -161,6 +164,7 @@ const Product = () => {
           category_id: 0,
           image_url: "",
           image_file: null,
+          image_public_id: null,
         });
         if (isEdit) {
           setProductId(0);
@@ -206,6 +210,7 @@ const Product = () => {
         category_id: 0,
         image_url: null,
         image_file: null,
+        image_public_id: null,
       });
 
       setPreview(null);
@@ -299,7 +304,15 @@ const Product = () => {
   ];
 
   const columns = [
-    { key: "id", title: "ID", sortable: true, width: "w-[10%]" },
+    {
+      key: "index",
+      title: "No.",
+      sortable: false,
+      width: "w-[10%]",
+      render: (value, row, index) => {
+        return <span className="ml-5">{index + 1}</span>;
+      },
+    },
     { key: "name", title: "Name", sortable: true, width: "w-[15%]" },
     {
       key: "description",
@@ -373,6 +386,11 @@ const Product = () => {
       width: "w-[10%]",
       render: (value) => new Date(value).toLocaleDateString(),
     },
+    {
+      key: "image_public_id",
+      hidden: true,
+    },
+    { key: "id", hidden: true },
   ];
 
   return (
@@ -472,6 +490,7 @@ const Product = () => {
                         alt="old image"
                         className="w-40 h-40 object-center object-cover rounded-md"
                       />
+                      <AdvancedImage cldImg={formData.image_public_id} />
                     </div>
                   </div>
                 ) : (

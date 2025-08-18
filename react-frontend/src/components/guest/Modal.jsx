@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
+import cn from "../../utils/cn";
 
-const Modal = ({ children, closeModal, title }) => {
+const Modal = ({ children, closeModal, title, classname = null }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 h-screen">
       {/* Backdrop */}
@@ -10,7 +11,12 @@ const Modal = ({ children, closeModal, title }) => {
       ></div>
 
       {/* Modal Content */}
-      <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-lg mx-4 duration-300 border border-white/20">
+      <div
+        className={cn(
+          "relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-lg mx-4 duration-300 border border-white/20 ",
+          classname
+        )}
+      >
         <div className="relative bg-white rounded-3xl p-8 max-h-[90vh]">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">

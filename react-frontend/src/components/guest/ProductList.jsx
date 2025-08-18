@@ -1,5 +1,8 @@
 import { Filter, RefreshCw, ShoppingCart, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Cloudinary } from "@cloudinary/url-gen/index";
+import { scale } from "@cloudinary/url-gen/actions/resize";
+import { AdvancedImage } from "@cloudinary/react";
 import api from "../../api/axios";
 import { toast } from "sonner";
 import FilterBar from "./Filter";
@@ -149,58 +152,78 @@ const ProductList = () => {
           <SmallLoading />
         ) : products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-            {products.map((product) => (
-              <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                <Link
+            {products.map((product) => {
+              const cld = new Cloudinary({
+                cloud: { cloudName: import.meta.env.VITE_CLOUD_NAME },
+              });
+
+              let img = null;
+              if (product.image_public_id) {
+                img = cld
+                  .image(product.image_public_id)
+                  .format("auto")
+                  .quality("auto")
+                  .resize(scale().width(500));
+              }
+              return (
+                <div
+                  className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                   key={product.id}
-                  to={`/product/${product.id}`}
-                  className="group"
                 >
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="w-full h-48 sm:h-64 object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    {/* {product.sale && (
+                  <Link to={`/product/${product.id}`} className="group">
+                    <div className="relative overflow-hidden">
+                      {img ? (
+                        <AdvancedImage
+                          cldImg={img}
+                          className="w-full h-48 sm:h-64 object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      ) : (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-48 sm:h-64 object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      {/* {product.sale && (
                   <span className="absolute top-3 left-3 bg-purple-500 text-white text-xs px-2 py-1 rounded">
                     SALE
                   </span>
                 )} */}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className="text-lg font-bold text-purple-600">
-                        ${Number(product.price).toLocaleString()}
-                      </span>
-                      {/* <span className="text-sm text-gray-500 line-through">
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-medium text-gray-900 mb-2">
+                        {product.name}
+                      </h3>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-lg font-bold text-purple-600">
+                          ${Number(product.price).toLocaleString()}
+                        </span>
+                        {/* <span className="text-sm text-gray-500 line-through">
                     ${product.originalPrice}
                   </span> */}
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                          />
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                        />
-                      ))}
-                    </div>
+                  </Link>
+                  <div className="px-4 pb-4">
+                    <button
+                      onClick={(e) => handleAddToCart(product.id)}
+                      className="w-full p-2 px-3 mt-2 rounded cursor-pointer text-center transition text-white bg-purple-400 hover:bg-purple-500 hover:scale-105 duration-300"
+                    >
+                      Add to cart
+                    </button>
                   </div>
-                </Link>
-                <div className="px-4 pb-4">
-                  <button
-                    onClick={(e) => handleAddToCart(product.id)}
-                    className="w-full p-2 px-3 mt-2 rounded cursor-pointer text-center transition text-white bg-purple-400 hover:bg-purple-500 hover:scale-105 duration-300"
-                  >
-                    Add to cart
-                  </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:gap-6">

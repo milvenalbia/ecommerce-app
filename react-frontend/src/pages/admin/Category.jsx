@@ -193,7 +193,15 @@ const Category = () => {
   //   ];
 
   const columns = [
-    { key: "id", title: "ID", sortable: true, width: "w-[10%]" },
+    {
+      key: "index",
+      title: "No.",
+      sortable: false,
+      width: "w-[10%]",
+      render: (value, row, index) => {
+        return <span className="ml-5">{index + 1}</span>;
+      },
+    },
     { key: "name", title: "Name", sortable: true, width: "w-[15%]" },
     {
       key: "description",
@@ -218,6 +226,10 @@ const Category = () => {
       sortable: true,
       width: "w-[15%]",
       render: (value) => new Date(value).toLocaleDateString(),
+    },
+    {
+      key: "id",
+      hidden: true,
     },
   ];
   return (

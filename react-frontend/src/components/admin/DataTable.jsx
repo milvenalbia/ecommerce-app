@@ -421,39 +421,46 @@ const DataTable = forwardRef((props, ref) => {
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              {finalColumns.map((column, index) => (
-                <th
-                  key={index}
-                  className={`px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider ${
-                    column.width || ""
-                  } ${
-                    column.sortable ? "cursor-pointer hover:bg-gray-100" : ""
-                  }`}
-                  onClick={() => column.sortable && handleSort(column.key)}
-                >
-                  <div className="flex items-center gap-2">
-                    {column.title}
-                    {column.sortable && (
-                      <div className="flex flex-col gap-1.5">
-                        <div
-                          className={`w-0 h-0 border-l-5 border-r-5 border-b-5 border-l-transparent border-r-transparent ${
-                            sortField === column.key && sortDirection === "asc"
-                              ? "border-b-blue-600"
-                              : "border-b-gray-500"
-                          } -mb-1`}
-                        />
-                        <div
-                          className={`w-0 h-0 border-l-5 border-r-5 border-t-5 border-l-transparent border-r-transparent ${
-                            sortField === column.key && sortDirection === "desc"
-                              ? "border-t-blue-600"
-                              : "border-t-gray-500"
-                          }`}
-                        />
+              {finalColumns.map(
+                (column, index) =>
+                  !column.hidden && (
+                    <th
+                      key={index}
+                      className={`px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider ${
+                        column.width || ""
+                      } ${
+                        column.sortable
+                          ? "cursor-pointer hover:bg-gray-100"
+                          : ""
+                      }`}
+                      onClick={() => column.sortable && handleSort(column.key)}
+                    >
+                      <div className="flex items-center gap-2">
+                        {column.title}
+                        {column.sortable && (
+                          <div className="flex flex-col gap-1.5">
+                            <div
+                              className={`w-0 h-0 border-l-5 border-r-5 border-b-5 border-l-transparent border-r-transparent ${
+                                sortField === column.key &&
+                                sortDirection === "asc"
+                                  ? "border-b-blue-600"
+                                  : "border-b-gray-500"
+                              } -mb-1`}
+                            />
+                            <div
+                              className={`w-0 h-0 border-l-5 border-r-5 border-t-5 border-l-transparent border-r-transparent ${
+                                sortField === column.key &&
+                                sortDirection === "desc"
+                                  ? "border-t-blue-600"
+                                  : "border-t-gray-500"
+                              }`}
+                            />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </th>
-              ))}
+                    </th>
+                  )
+              )}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -476,21 +483,21 @@ const DataTable = forwardRef((props, ref) => {
                 </td>
               </tr>
             ) : (
-              data.map((row, index) => (
+              data.map((row, rowIndex) => (
                 <tr
-                  key={row.id || index}
-                  className={`hover:bg-gray-50 transition-colors`}
+                  key={row.id || rowIndex}
+                  className="hover:bg-gray-50 transition-colors"
                 >
-                  {displayColumns.map((column, index) => (
-                    <td
-                      key={index}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                    >
-                      {column.render
-                        ? column.render(row[column.key], row)
-                        : row[column.key]}
-                    </td>
-                  ))}
+                  {displayColumns.map(
+                    (column, colIndex) =>
+                      !column.hidden && (
+                        <td key={colIndex} className="pl-4">
+                          {column.render
+                            ? column.render(row[column.key], row, rowIndex) // ✅ correct row index
+                            : row[column.key]}
+                        </td>
+                      )
+                  )}
                   {showActions && (
                     <td className="px-6 w-[10%] py-4 whitespace-nowrap text-sm text-gray-900">
                       {renderActionButtons(row)}

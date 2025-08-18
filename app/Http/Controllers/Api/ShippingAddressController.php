@@ -12,10 +12,7 @@ class ShippingAddressController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
-        
-    }
+    public function index(Request $request) {}
 
     /**
      * Store a newly created resource in storage.
@@ -31,7 +28,9 @@ class ShippingAddressController extends Controller
             'phone_number' => 'required|max:13|regex:/^\+639\d{9}$/|unique:shipping_addresses'
         ]);
 
-        $address = ShippingAddress::create([...$fields, 'user_id' => $user_id]);
+        $address = ShippingAddress::create(array_merge($fields, [
+            "user_id" => $user_id
+        ]));;
 
         return [
             'message' => 'Shipping address created successfully',

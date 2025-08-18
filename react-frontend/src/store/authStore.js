@@ -24,6 +24,15 @@ export const useAuthStore = create(
       isLoading: false,
       error: null,
 
+      updateShippingAddress: (newAddress) => {
+        set((state) => ({
+          user: {
+            ...state.user,
+            shipping_addresses: newAddress,
+          },
+        }));
+      },
+
       fetchUser: async () => {
         const { user } = get();
         if (!user) {

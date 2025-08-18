@@ -42,7 +42,16 @@ const Payment = () => {
   };
 
   const columns = [
-    { key: "id", title: "ID", sortable: true, width: "w-[10%]" },
+    { key: "id", hidden: true },
+    {
+      key: "index",
+      title: "No.",
+      sortable: false,
+      width: "w-[10%]",
+      render: (value, row, index) => {
+        return <span className="ml-5">{index + 1}</span>;
+      },
+    },
     {
       key: "order",
       title: "Name",

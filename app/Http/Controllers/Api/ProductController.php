@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Jobs\Product\UploadProductImage;
 use App\Models\Cart;
 use App\Models\Product;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
@@ -88,16 +89,16 @@ class ProductController extends Controller implements HasMiddleware
             "image_url" => 'required|image|max:4096',
         ]);
 
-        // Upload to Cloudinary
-        $path = Storage::disk('cloudinary')
-            ->putFile('ecom_products', $request->file('image_url'));
-
-        $image_url = Storage::disk('cloudinary')->url($path);
-
+        // Save a temporary placeholder product and image locally
         $product = Product::create(array_merge($fields, [
-            "image_url" => $image_url,
-            "image_public_id" => $path
+            "image_url" => null, // Set to null initially
+            "image_public_id" => null, // Set to null initially
         ]));
+
+        $temporaryImagePath = $request->file('image_url')->store('temp_uploads');
+
+        // Dispatch the job to the queue
+        UploadProductImage::dispatch($product->id, $temporaryImagePath);
 
         return response()->json([
             'message' => 'Product created successfully.',
@@ -130,31 +131,26 @@ class ProductController extends Controller implements HasMiddleware
             "category_id" => 'required|exists:categories,id',
         ];
 
-        // If image is uploaded, validate it as image; else, image_url required only if no existing image
         if ($request->hasFile('image_url')) {
             $rules["image_url"] = 'image|max:4096';
-        } else {
-            $rules["image_url"] = $product->image_url ? 'nullable' : 'required';
         }
 
         $fields = $request->validate($rules);
 
-        // Process image if uploaded
+        // Update the product's non-image fields first
+        $product->update(array_merge($fields, [
+            "image_url" => $product->image_url,
+            "image_public_id" => $product->image_public_id,
+        ]));
+
+        // If a new image is provided, handle it with a queued job
         if ($request->hasFile('image_url')) {
-            // Delete old image only if public id exists
-            if ($product->image_public_id) {
-                Storage::disk('cloudinary')->delete($product->image_public_id);
-            }
+            $temporaryImagePath = $request->file('image_url')->store('temp_uploads');
+            $oldPublicId = $product->image_public_id;
 
-            // Upload new image
-            $path = Storage::disk('cloudinary')->putFile('ecom_products', $request->file('image_url'));
-            $image_url = Storage::disk('cloudinary')->url($path);
-
-            $fields['image_url'] = $image_url;
-            $fields['image_public_id'] = $path;
+            // Dispatch the job to the queue
+            UploadProductImage::dispatch($product->id, $temporaryImagePath, $oldPublicId);
         }
-
-        $product->update($fields);
 
         return [
             'message' => 'Product updated successfully.'
